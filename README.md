@@ -66,7 +66,13 @@ Most configuration now lives in the Settings store (SQLite). Optionally set:
 1. Clone the repository
 2. Create venv and install: `make venv && make install`
 3. Run the server: `make run`
-4. Open `http://localhost:5000/` — on first run, you will be redirected to the Settings page to configure providers (OpenAI, Pinecone), defaults, theme, and agents. Diagnostics must pass (OpenAI and Pinecone connectivity) before chat/files are enabled.
+4. The server will auto-select a free port starting at 5000 and print `Using port <PORT>`. Open `http://localhost:<PORT>/` — on first run, you will be redirected to the Settings page to configure providers (OpenAI, Pinecone), defaults, theme, and agents. Diagnostics must pass (OpenAI and Pinecone connectivity) before chat/files are enabled.
+
+To override the defaults:
+
+```bash
+make run PORT=5001 HOST=127.0.0.1
+```
 
 ## Directory Structure
 
