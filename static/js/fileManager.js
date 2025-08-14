@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check file extension
             const fileExtension = file.name.split('.').pop().toLowerCase();
-            if (!['txt', 'json', 'md', 'jsonl', 'csv'].includes(fileExtension)) {
+            if (!['txt', 'json', 'md', 'jsonl', 'csv', 'docx', 'pdf', 'xlsx'].includes(fileExtension)) {
                 console.warn(`Skipping file ${file.name}: Unsupported file type`);
                 failedFiles++;
                 continue;
@@ -177,8 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function uploadSingleFile(file) {
         // Check file extension
         const fileExtension = file.name.split('.').pop().toLowerCase();
-        if (!['txt', 'json', 'md', 'jsonl', 'csv'].includes(fileExtension)) {
-            showUploadStatus('error', 'Unsupported file type. Please upload files with .txt, .json, .md, .jsonl, or .csv extensions.');
+        if (!['txt', 'json', 'md', 'jsonl', 'csv', 'docx', 'pdf', 'xlsx'].includes(fileExtension)) {
+            showUploadStatus('error', 'Unsupported file type. Please upload .txt, .md, .json, .jsonl, .csv, .docx, .pdf, or .xlsx files.');
             return;
         }
         

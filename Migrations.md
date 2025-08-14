@@ -103,21 +103,20 @@ Guidelines/Patterns
 
 Changes
 - Extend allowed file types: `txt, md, json, jsonl, csv, docx, pdf, xlsx` (and optionally `xls`).
-- Implement parsers:
-  - TXT/MD: pass-through with markdown hint.
-  - JSON/JSONL: safe load; pretty-print for context; extract optional `doc_type` from known keys.
-  - CSV/XLSX: use `csv` and `openpyxl` to load; format as table-like text; extract `doc_type` if present in a header.
-  - DOCX: `python-docx` to extract paragraphs in order.
-  - PDF: `pypdf` (robust text extraction) with per-page concatenation; handle encrypted PDFs with explicit error.
-- Normalize metadata: `doc_type` (string), `source_filename`, `url`, `title`, `chunk_index`, `total_chunks`.
-- Keep chunking configurable via settings (`chunk_size`, `chunk_overlap`).
+- Implemented parsers in `services/file_service.extract_text_and_metadata`:
+  - TXT/MD: pass-through.
+  - JSON/JSONL: safe load + pretty-print; infer `doc_type` from keys (`doc_type`, `type`, `Category`, `Type`).
+  - CSV: parse header + rows; pretty-print; infer `doc_type` from a header column.
+  - XLSX: `openpyxl` read-only; emit per-sheet headers and rows; infer `doc_type` from header/first data row.
+  - DOCX: `python-docx` paragraphs concatenated.
+  - PDF: `pypdf` per-page extraction; attempt empty-password decrypt; clear error for encrypted PDFs.
+- Normalize metadata and upsert to Pinecone with `type` set from document metadata; chunking via `utils.embeddings.chunk_text` (sizes from settings).
 
 Success criteria
 - Uploading each supported type succeeds; chunks get created; Pinecone upserts succeed; semantic search returns content.
 
 Testing
-- Unit: individual parser functions with sample files.
-- Integration: upload one file of each type; assert chunk counts and Pinecone stats.
+- To follow in Chunk 8. Interim: manual upload of each type; lints/tests green with providers unconfigured.
 
 Debugging
 - Parser-level logs with file name, pages/rows processed, and truncation notes. No content logs beyond small previews.
@@ -130,18 +129,16 @@ Guidelines/Patterns
 ### Chunk 5 — Settings UI & First-Run Wizard
 
 Changes
-- New `/settings` page (passwordless local admin):
-  - Sections: General (brand/theme), Providers (OpenAI, Pinecone), LLM (default params), Agents (CRUD), RAG (chunking/limits), Database (SQLite/Postgres), Security (optional master password), Advanced (feature flags), Diagnostics (test buttons).
-- First-run wizard: blocks the app until required settings (OpenAI key, Pinecone key/index, embedding/llm model, chunking, theme) are saved and validated via “Test connection” actions.
-- Persist keys in SQLite (optionally encrypted if a master password is set).
+- Added `/settings` template with tabbed UI for General, Providers (OpenAI/Pinecone), RAG, Agents (read-only list for now), Diagnostics.
+- First-run gating: `/` redirects to `/settings` until readiness passes (`services.settings_service.readiness`).
+- New Settings APIs in `routes/settings_routes.py`: `/api/settings` (get all), and POST endpoints for each group; `/api/settings/test/openai`, `/api/settings/test/pinecone`, and `/api/diagnostics`.
 
 Success criteria
 - On first run, wizard appears; “Test OpenAI” and “Test Pinecone” succeed with correct keys; app transitions to ready state.
 - Subsequent visits allow editing settings and agents; changes persist.
 
 Testing
-- Integration: simulate first-run (empty settings), complete wizard via API, assert `/health` becomes ready.
-- Unit: validation schemas for each settings group.
+- To follow in Chunk 8. Interim: diagnostics endpoint returns readiness and provider checks; manual validation.
 
 Debugging
 - Add `/diagnostics` API that runs end-to-end checks (OpenAI, Pinecone, DB write/read) and returns a structured report.
@@ -154,16 +151,13 @@ Guidelines/Patterns
 ### Chunk 6 — Chat UI Simplification (Remove Resource Cards)
 
 Changes
-- Remove resource carousel/card rendering from `static/js/chat.js` and associated CSS.
-- Bot messages render only the main answer; optionally render `next_steps` as buttons.
-- Maintain typing animation and markdown preview.
+- Removed resource card rendering from `static/js/chat.js`. Answers render as markdown; optional next_steps shown as buttons.
 
 Success criteria
 - No references to resources remain in UI or API responses; no UI errors during chat.
 
 Testing
 - Manual: chat flow start-to-finish; verify no DOM errors.
-- Unit: front-end smoke test (if present) or server response schema assertions.
 
 Debugging
 - Log response schema at server before returning; validate keys against settings-defined schema.

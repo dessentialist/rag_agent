@@ -1,11 +1,10 @@
-import re
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+import re
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from database import db
 from models import Setting
-
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +99,7 @@ def ensure_default_ui_settings() -> None:
 
 # Typed getters/setters
 
+
 def get_general_settings() -> Dict[str, Any]:
     value = _get_setting("general") or {}
     brand_name = value.get("brand_name") or "RAG Agent"
@@ -129,21 +129,34 @@ def get_ui_settings() -> Dict[str, Any]:
     return _get_setting("ui") or {}
 
 
-def set_ui_settings(welcome_message: str, predefined_prompts: List[Dict[str, str]], default_course_thumbnail: Optional[str]) -> None:
+def set_ui_settings(
+    welcome_message: str,
+    predefined_prompts: List[Dict[str, str]],
+    default_course_thumbnail: Optional[str],
+) -> None:
     if not isinstance(predefined_prompts, list):
         raise SettingsValidationError("predefined_prompts must be a list")
-    _set_setting("ui", {
-        "welcome_message": welcome_message,
-        "predefined_prompts": predefined_prompts,
-        "default_course_thumbnail": default_course_thumbnail,
-    })
+    _set_setting(
+        "ui",
+        {
+            "welcome_message": welcome_message,
+            "predefined_prompts": predefined_prompts,
+            "default_course_thumbnail": default_course_thumbnail,
+        },
+    )
 
 
 def get_openai_settings() -> Dict[str, Any]:
     return _get_setting("openai") or {}
 
 
-def set_openai_settings(api_key: str, llm_model: str, temperature: float, max_tokens: int, response_format: Optional[str] = None) -> None:
+def set_openai_settings(
+    api_key: str,
+    llm_model: str,
+    temperature: float,
+    max_tokens: int,
+    response_format: Optional[str] = None,
+) -> None:
     if not api_key:
         raise SettingsValidationError("OpenAI api_key is required")
     if not llm_model:
@@ -152,13 +165,16 @@ def set_openai_settings(api_key: str, llm_model: str, temperature: float, max_to
         raise SettingsValidationError("temperature must be between 0.0 and 2.0")
     if max_tokens is None or int(max_tokens) <= 0:
         raise SettingsValidationError("max_tokens must be a positive integer")
-    _set_setting("openai", {
-        "api_key": api_key,
-        "llm_model": llm_model,
-        "temperature": float(temperature),
-        "max_tokens": int(max_tokens),
-        "response_format": response_format or "json_object",
-    })
+    _set_setting(
+        "openai",
+        {
+            "api_key": api_key,
+            "llm_model": llm_model,
+            "temperature": float(temperature),
+            "max_tokens": int(max_tokens),
+            "response_format": response_format or "json_object",
+        },
+    )
 
 
 def get_embedding_settings() -> Dict[str, Any]:
@@ -175,7 +191,15 @@ def get_pinecone_settings() -> Dict[str, Any]:
     return _get_setting("pinecone") or {}
 
 
-def set_pinecone_settings(api_key: str, index_name: str, dimension: int, metric: str, cloud: str, region: str, search_limit: int = 5) -> None:
+def set_pinecone_settings(
+    api_key: str,
+    index_name: str,
+    dimension: int,
+    metric: str,
+    cloud: str,
+    region: str,
+    search_limit: int = 5,
+) -> None:
     if not api_key:
         raise SettingsValidationError("Pinecone api_key is required")
     if not index_name:
@@ -183,16 +207,21 @@ def set_pinecone_settings(api_key: str, index_name: str, dimension: int, metric:
     if int(dimension) <= 0:
         raise SettingsValidationError("Pinecone dimension must be positive")
     if metric not in {"cosine", "dotproduct", "euclidean"}:
-        raise SettingsValidationError("Pinecone metric must be one of 'cosine', 'dotproduct', 'euclidean'")
-    _set_setting("pinecone", {
-        "api_key": api_key,
-        "index_name": index_name,
-        "dimension": int(dimension),
-        "metric": metric,
-        "cloud": cloud,
-        "region": region,
-        "search_limit": int(search_limit),
-    })
+        raise SettingsValidationError(
+            "Pinecone metric must be one of 'cosine', 'dotproduct', 'euclidean'"
+        )
+    _set_setting(
+        "pinecone",
+        {
+            "api_key": api_key,
+            "index_name": index_name,
+            "dimension": int(dimension),
+            "metric": metric,
+            "cloud": cloud,
+            "region": region,
+            "search_limit": int(search_limit),
+        },
+    )
 
 
 def get_rag_settings() -> Dict[str, Any]:
@@ -204,13 +233,18 @@ def set_rag_settings(chunk_size: int, chunk_overlap: int, allowed_extensions: Li
         raise SettingsValidationError("chunk_size must be positive")
     if int(chunk_overlap) < 0:
         raise SettingsValidationError("chunk_overlap must be >= 0")
-    if not isinstance(allowed_extensions, list) or not all(isinstance(ext, str) for ext in allowed_extensions):
+    if not isinstance(allowed_extensions, list) or not all(
+        isinstance(ext, str) for ext in allowed_extensions
+    ):
         raise SettingsValidationError("allowed_extensions must be a list of strings")
-    _set_setting("rag", {
-        "chunk_size": int(chunk_size),
-        "chunk_overlap": int(chunk_overlap),
-        "allowed_extensions": allowed_extensions,
-    })
+    _set_setting(
+        "rag",
+        {
+            "chunk_size": int(chunk_size),
+            "chunk_overlap": int(chunk_overlap),
+            "allowed_extensions": allowed_extensions,
+        },
+    )
 
 
 def readiness() -> Dict[str, Any]:
@@ -246,5 +280,3 @@ def readiness() -> Dict[str, Any]:
 
     ready = len(missing) == 0
     return {"ready": ready, "missing_keys": missing}
-
-

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - {{ brand_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<header class="py-3 border-bottom" style="background-color: #fff;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0" style="color: var(--bigid-purple); font-weight: 600;">{{ brand_name }}</h1>
+            <div>
+                <ul class="nav nav-tabs border-0" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="bi bi-chat-dots"></i> Chat</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="{{ url_for('file_bp.files_page') }}"><i class="bi bi-file-earmark-text"></i> Files</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" href="#"><i class="bi bi-gear"></i> Settings</a>
+                    </li>
+                </ul>
+            </div>
+            <button type="button" class="btn-close" aria-label="Close"></button>
+        </div>
+    </div>
+    </header>
+
+<main class="container my-4">
+    <div class="row">
+        <div class="col-lg-4 mb-3">
+            <div class="list-group" id="settings-tabs" role="tablist">
+                <a class="list-group-item list-group-item-action active" data-bs-toggle="list" href="#general" role="tab">General</a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#providers" role="tab">Providers</a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#rag" role="tab">RAG</a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#agents" role="tab">Agents</a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#diagnostics" role="tab">Diagnostics</a>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="general" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5>General</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Brand Name</label>
+                                <input id="brandName" class="form-control" placeholder="RAG Agent" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Logo URL</label>
+                                <input id="logoUrl" class="form-control" placeholder="https://..." />
+                            </div>
+                            <button id="saveGeneral" class="btn btn-primary">Save</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="providers" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5>Providers</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">OpenAI API Key</label>
+                                    <input id="openaiKey" class="form-control" placeholder="sk-..." />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">LLM Model</label>
+                                    <input id="llmModel" class="form-control" placeholder="gpt-4o" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Temperature</label>
+                                    <input id="llmTemp" type="number" step="0.1" min="0" max="2" class="form-control" value="0.3" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Max Tokens</label>
+                                    <input id="llmMaxTokens" type="number" class="form-control" value="1000" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Embedding Model</label>
+                                    <input id="embeddingModel" class="form-control" placeholder="text-embedding-3-small" />
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button id="saveProviders" class="btn btn-primary me-2">Save</button>
+                                <button id="testOpenAI" class="btn btn-outline-secondary me-2">Test OpenAI</button>
+                                <button id="testPinecone" class="btn btn-outline-secondary">Test Pinecone</button>
+                            </div>
+                            <hr />
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Pinecone API Key</label>
+                                    <input id="pineconeKey" class="form-control" placeholder="pc-..." />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Index Name</label>
+                                    <input id="indexName" class="form-control" placeholder="rag-agent-index" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Dimension</label>
+                                    <input id="pcDimension" type="number" class="form-control" placeholder="1536" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Metric</label>
+                                    <select id="pcMetric" class="form-select">
+                                        <option value="cosine">cosine</option>
+                                        <option value="dotproduct">dotproduct</option>
+                                        <option value="euclidean">euclidean</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cloud</label>
+                                    <input id="pcCloud" class="form-control" value="aws" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Region</label>
+                                    <input id="pcRegion" class="form-control" value="us-west-2" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="rag" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5>RAG Settings</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Chunk Size</label>
+                                    <input id="chunkSize" type="number" class="form-control" value="500" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Chunk Overlap</label>
+                                    <input id="chunkOverlap" type="number" class="form-control" value="30" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Allowed Extensions (comma-separated)</label>
+                                    <input id="allowedExt" class="form-control" value="txt,md,json,jsonl,csv,docx,pdf,xlsx" />
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button id="saveRag" class="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="agents" role="tabpanel">
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-body">
+                            <h5>Create / Edit Agent</h5>
+                            <!--
+                              The agent form supports both create and edit flows.
+                              - When agentId is empty, submission creates a new agent (POST /api/agents)
+                              - When agentId is set, submission updates the agent (PUT /api/agents/<id>)
+                            -->
+                            <form id="agentForm">
+                                <input type="hidden" id="agentId" />
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Name</label>
+                                        <input id="agentName" class="form-control" placeholder="documentation" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">LLM Model</label>
+                                        <input id="agentModel" class="form-control" placeholder="gpt-4o" required />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Description</label>
+                                        <input id="agentDescription" class="form-control" placeholder="Agent purpose" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Role/System Prompt</label>
+                                        <textarea id="agentPrompt" class="form-control" rows="4" placeholder="You are a strict RAG agent..." required></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Temperature</label>
+                                        <input id="agentTemperature" type="number" step="0.1" min="0" max="2" class="form-control" value="0.3" required />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Max Tokens</label>
+                                        <input id="agentMaxTokens" type="number" class="form-control" value="1200" required />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Response Format</label>
+                                        <select id="agentResponseFormat" class="form-select">
+                                            <option value="json_object">json_object</option>
+                                            <option value="text">text</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Selection Rules (JSON)</label>
+                                        <textarea id="agentSelectionRules" class="form-control" rows="3" placeholder='{"doc_type_any_of": ["documentation"]}'></textarea>
+                                        <small class="text-muted">Example: {"doc_type_any_of": ["documentation"]} or include keyword rules: {"keyword_any_of": ["install", "config"]}</small>
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-flex gap-2">
+                                    <button id="saveAgentBtn" type="button" class="btn btn-primary">Save Agent</button>
+                                    <button id="resetAgentBtn" type="button" class="btn btn-outline-secondary">Reset</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5>Agents</h5>
+                            <div id="agentsList" class="mb-3"></div>
+                            <a class="btn btn-outline-primary" href="#" onclick="loadAgents(); return false;">Refresh</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="diagnostics" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5>Diagnostics</h5>
+                            <pre id="diagOut" class="bg-light border rounded p-3" style="white-space: pre-wrap;"></pre>
+                            <button id="runDiag" class="btn btn-secondary">Run Diagnostics</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+async function fetchJSON(url, opts={}) { const res = await fetch(url, opts); if (!res.ok) throw new Error(await res.text()); return res.json(); }
+function toList(val) { return (val||'').split(',').map(s=>s.trim()).filter(Boolean); }
+
+async function loadSettings() {
+  try {
+    const s = await fetchJSON('/api/settings');
+    document.getElementById('brandName').value = s.general.brand_name || '';
+    document.getElementById('logoUrl').value = s.general.logo_url || '';
+    document.getElementById('openaiKey').value = s.openai.api_key || '';
+    document.getElementById('llmModel').value = s.openai.llm_model || '';
+    document.getElementById('llmTemp').value = s.openai.temperature ?? 0.3;
+    document.getElementById('llmMaxTokens').value = s.openai.max_tokens ?? 1000;
+    document.getElementById('embeddingModel').value = s.embedding.embedding_model || '';
+    document.getElementById('pineconeKey').value = s.pinecone.api_key || '';
+    document.getElementById('indexName').value = s.pinecone.index_name || '';
+    document.getElementById('pcDimension').value = s.pinecone.dimension || '';
+    document.getElementById('pcMetric').value = s.pinecone.metric || 'cosine';
+    document.getElementById('pcCloud').value = s.pinecone.cloud || 'aws';
+    document.getElementById('pcRegion').value = s.pinecone.region || 'us-west-2';
+    document.getElementById('chunkSize').value = s.rag.chunk_size ?? 500;
+    document.getElementById('chunkOverlap').value = s.rag.chunk_overlap ?? 30;
+    document.getElementById('allowedExt').value = (s.rag.allowed_extensions||[]).join(',');
+  } catch(e) { console.error(e); }
+}
+
+async function loadAgents() {
+  try {
+    const data = await fetchJSON('/api/agents');
+    const list = document.getElementById('agentsList');
+    list.innerHTML = '';
+    (data.agents||[]).forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'border rounded p-2 mb-2';
+      div.innerHTML = `<div class="d-flex justify-content-between align-items-start">
+          <div class="me-2">
+            <strong>${a.name}</strong><br/>
+            <small>${a.description||''}</small><br/>
+            <code>${JSON.stringify(a.selection_rules)}</code>
+          </div>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick='editAgent(${JSON.stringify(a)})'>Edit</button>
+            <button class="btn btn-outline-danger" onclick='deleteAgent(${a.id})'>Delete</button>
+          </div>
+        </div>`;
+      list.appendChild(div);
+    });
+  } catch(e) { console.error(e); }
+}
+
+document.getElementById('saveGeneral').addEventListener('click', async () => {
+  await fetchJSON('/api/settings/general', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ brand_name: document.getElementById('brandName').value, logo_url: document.getElementById('logoUrl').value })});
+  alert('General saved.');
+});
+
+document.getElementById('saveProviders').addEventListener('click', async () => {
+  const openai = await fetchJSON('/api/settings/openai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ api_key: document.getElementById('openaiKey').value, llm_model: document.getElementById('llmModel').value, temperature: parseFloat(document.getElementById('llmTemp').value), max_tokens: parseInt(document.getElementById('llmMaxTokens').value,10), })});
+  const embed = await fetchJSON('/api/settings/embedding', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ embedding_model: document.getElementById('embeddingModel').value })});
+  const pine = await fetchJSON('/api/settings/pinecone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ api_key: document.getElementById('pineconeKey').value, index_name: document.getElementById('indexName').value, dimension: parseInt(document.getElementById('pcDimension').value,10), metric: document.getElementById('pcMetric').value, cloud: document.getElementById('pcCloud').value, region: document.getElementById('pcRegion').value, })});
+  alert('Providers saved.');
+});
+
+document.getElementById('saveRag').addEventListener('click', async () => {
+  await fetchJSON('/api/settings/rag', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chunk_size: parseInt(document.getElementById('chunkSize').value,10), chunk_overlap: parseInt(document.getElementById('chunkOverlap').value,10), allowed_extensions: toList(document.getElementById('allowedExt').value), })});
+  alert('RAG settings saved.');
+});
+
+document.getElementById('testOpenAI').addEventListener('click', async ()=> {
+  const res = await fetchJSON('/api/settings/test/openai', { method:'POST' });
+  alert(res.ok? 'OpenAI OK':'OpenAI test failed');
+});
+document.getElementById('testPinecone').addEventListener('click', async ()=> {
+  const res = await fetchJSON('/api/settings/test/pinecone', { method:'POST' });
+  alert(res.ok? 'Pinecone OK':'Pinecone test failed');
+});
+
+document.getElementById('runDiag').addEventListener('click', async ()=> {
+  const r = await fetchJSON('/api/diagnostics');
+  document.getElementById('diagOut').textContent = JSON.stringify(r, null, 2);
+});
+
+// Agent form handlers
+function resetAgentForm() {
+  document.getElementById('agentId').value = '';
+  document.getElementById('agentName').value = '';
+  document.getElementById('agentDescription').value = '';
+  document.getElementById('agentPrompt').value = '';
+  document.getElementById('agentModel').value = '';
+  document.getElementById('agentTemperature').value = '0.3';
+  document.getElementById('agentMaxTokens').value = '1200';
+  document.getElementById('agentResponseFormat').value = 'json_object';
+  document.getElementById('agentSelectionRules').value = '';
+}
+document.getElementById('resetAgentBtn').addEventListener('click', resetAgentForm);
+
+function editAgent(agent) {
+  document.getElementById('agentId').value = agent.id;
+  document.getElementById('agentName').value = agent.name || '';
+  document.getElementById('agentDescription').value = agent.description || '';
+  document.getElementById('agentPrompt').value = agent.role_system_prompt || '';
+  document.getElementById('agentModel').value = agent.llm_model || '';
+  document.getElementById('agentTemperature').value = agent.temperature ?? 0.3;
+  document.getElementById('agentMaxTokens').value = agent.max_tokens ?? 1200;
+  document.getElementById('agentResponseFormat').value = agent.response_format || 'json_object';
+  document.getElementById('agentSelectionRules').value = JSON.stringify(agent.selection_rules || {}, null, 2);
+}
+
+async function deleteAgent(id) {
+  if (!confirm('Delete this agent?')) return;
+  await fetchJSON(`/api/agents/${id}`, { method: 'DELETE' });
+  await loadAgents();
+}
+
+document.getElementById('saveAgentBtn').addEventListener('click', async () => {
+  const id = document.getElementById('agentId').value.trim();
+  const payload = {
+    name: document.getElementById('agentName').value.trim(),
+    description: document.getElementById('agentDescription').value.trim(),
+    role_system_prompt: document.getElementById('agentPrompt').value,
+    llm_model: document.getElementById('agentModel').value.trim(),
+    temperature: parseFloat(document.getElementById('agentTemperature').value),
+    max_tokens: parseInt(document.getElementById('agentMaxTokens').value, 10),
+    response_format: document.getElementById('agentResponseFormat').value,
+  };
+  const rulesText = document.getElementById('agentSelectionRules').value.trim();
+  try {
+    payload.selection_rules = rulesText ? JSON.parse(rulesText) : {};
+  } catch (e) {
+    alert('Selection Rules must be valid JSON.');
+    return;
+  }
+  if (!payload.name || !payload.llm_model || !payload.role_system_prompt) {
+    alert('Name, Model, and Role/System Prompt are required.');
+    return;
+  }
+  if (id) {
+    await fetchJSON(`/api/agents/${id}`, {
+      method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+    });
+  } else {
+    await fetchJSON('/api/agents', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+    });
+  }
+  resetAgentForm();
+  await loadAgents();
+  alert('Agent saved.');
+});
+
+loadSettings();
+loadAgents();
+</script>
+</body>
+</html>
+
+

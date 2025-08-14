@@ -4,7 +4,6 @@ from typing import Dict, List, Optional, Tuple
 from database import db
 from models import Agent
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -102,7 +101,9 @@ def _matches_rules(rules: Dict, doc_types: List[str], user_query: str) -> bool:
     return True
 
 
-def select_agent_for_request(relevant_docs: List[Dict], user_query: str) -> Tuple[Optional[Agent], Optional[Dict]]:
+def select_agent_for_request(
+    relevant_docs: List[Dict], user_query: str
+) -> Tuple[Optional[Agent], Optional[Dict]]:
     """Select an agent using selection_rules evaluated against docs and query.
 
     Returns (agent, matched_rules) or (None, None) when no matches.
@@ -144,7 +145,10 @@ def ensure_default_agents() -> None:
     create_agent(
         name="documentation",
         description="Agent specialized for technical documentation",
-        role_system_prompt=(rag_rigor + " Prefer concise technical explanations. Include document references inline."),
+        role_system_prompt=(
+            rag_rigor
+            + " Prefer concise technical explanations. Include document references inline."
+        ),
         llm_model="gpt-4o",
         temperature=0.3,
         max_tokens=1200,
@@ -155,13 +159,12 @@ def ensure_default_agents() -> None:
     create_agent(
         name="course",
         description="Agent specialized for course/help content",
-        role_system_prompt=(rag_rigor + " Provide helpful, friendly tone and actionable next steps."),
+        role_system_prompt=(
+            rag_rigor + " Provide helpful, friendly tone and actionable next steps."
+        ),
         llm_model="gpt-4o",
         temperature=0.4,
         max_tokens=1200,
         response_format="json_object",
         selection_rules={"doc_type_any_of": ["course"]},
     )
-
-
-

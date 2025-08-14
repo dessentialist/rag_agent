@@ -28,8 +28,8 @@ The BigID University AI Tutor is an advanced document management and tutoring sy
 
 ### Key Features
 
-- **Intelligent Chatbot Interface**: Ask questions about BigID and receive accurate answers based on the knowledge base
-- **Document Management**: Upload, view, and delete files (supports TXT, JSON, MD, JSONL, CSV)
+- **Intelligent Chatbot Interface**: Ask questions about BigID and receive accurate answers based on the knowledge base (resource cards removed; optional next-steps retained)
+- **Document Management**: Upload, view, and delete files (supports TXT, MD, JSON, JSONL, CSV, DOCX, PDF, XLSX)
 - **Database Storage**: Files uploaded through the UI are saved directly to the database
 - **Vector Database Storage**: Document chunks are stored in Pinecone vector database for semantic retrieval
 - **Semantic Search**: Uses vector embeddings to find the most relevant information for user queries
@@ -42,7 +42,7 @@ The application follows a modular architecture with clean separation between com
 
 - **Frontend**: HTML/CSS/JavaScript interface with separate pages for chat and file management
 - **Backend**: Flask-based Python server with RESTful API endpoints
-- **Database**: PostgreSQL with SQLAlchemy ORM for data persistence
+- **Database**: SQLite by default via SQLAlchemy (Postgres optional via `DATABASE_URL`)
 - **Vector Storage**: Pinecone vector database for semantic search capabilities
 - **Document Storage**: PostgreSQL database for document content and metadata
 - **AI Services**: OpenAI API integration for embeddings and LLM capabilities
@@ -208,9 +208,9 @@ Stores individual messages within conversations.
 
 ### Storage Systems
 
-1. **PostgreSQL Database**
-   - Purpose: Primary storage for document content and metadata
-   - Tables: Documents, DocumentChunks, Conversations, Messages
+1. **SQLite (default) or PostgreSQL Database**
+   - Purpose: Primary storage for settings, agents, conversations, files, and chunks
+   - Tables: Settings, Agents, Documents, DocumentChunks, Conversations, Messages
    
 2. **Pinecone Vector Database**
    - Purpose: Stores vector embeddings for semantic search
@@ -227,6 +227,12 @@ Stores individual messages within conversations.
 - [ ] Implement advanced analytics on user interactions
 
 ## Change Log
+
+### Version 1.5 (Aug 14, 2025)
+- ✅ Added ingestion for DOCX, PDF, and XLSX with robust parsers and metadata normalization
+- ✅ Introduced Settings UI (`/settings`) with diagnostics and first-run gating via `/api/health`
+- ✅ Simplified Chat UI by removing resource cards; retained answers + optional next steps
+- ✅ Extended API: `/api/settings/*`, `/api/settings/test/*`, `/api/diagnostics`
 
 ### Version 1.4 (May 12, 2025)
 - ✅ Modified doc_agent to respond with brief explanations in JSON format

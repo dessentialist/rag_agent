@@ -255,16 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     addNextSteps(currentData.next_steps, element);
                 }
                 
-                // Add resource only when using course agent
-                if (currentData && currentData.resources && currentAgentType === 'course') {
-                    // Only render resource card for course agent responses
-                    const resourceUrl = currentData.resources;
-                    if (resourceUrl) {
-                        // Create a simple resource card with the URL from the response
-                        addCourseResource(resourceUrl);
-                    }
-                }
-                
                 scrollToBottom();
             }
         }
@@ -272,74 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
         typeText();
     }
 
-    // Add resource carousel
-    // Add a course resource card (simplified)
-    function addCourseResource(resourceUrl) {
-        const lastMessage = document.querySelector('.message-bot:last-child');
-        if (!lastMessage) return;
-        
-        // Create a simple card for the course resource
-        const card = document.createElement('div');
-        card.className = 'card resource-card';
-        
-        // Create a thumbnail container
-        const thumbnailContainer = document.createElement('div');
-        thumbnailContainer.className = 'thumbnail-container';
-        
-        // Create a thumbnail image
-        const thumbnail = document.createElement('img');
-        thumbnail.className = 'course-thumbnail';
-        thumbnail.src = DEFAULT_COURSE_THUMBNAIL; // Use the default thumbnail from config
-        thumbnail.alt = 'Course Thumbnail';
-        
-        thumbnailContainer.appendChild(thumbnail);
-        card.appendChild(thumbnailContainer);
-        
-        // Create card body
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
-        
-        const title = document.createElement('h5');
-        title.className = 'card-title';
-        title.textContent = 'Course Resource';
-        
-        const description = document.createElement('p');
-        description.className = 'card-text';
-        description.textContent = 'BigID University course material';
-        
-        const link = document.createElement('a');
-        link.className = 'btn btn-primary';
-        link.textContent = 'Go to Course';
-        link.href = resourceUrl || '#';
-        link.target = '_blank';
-        
-        // Add elements to the card
-        cardBody.appendChild(title);
-        cardBody.appendChild(description);
-        cardBody.appendChild(link);
-        card.appendChild(cardBody);
-        
-        // Add resources section header
-        const resourcesHeader = document.createElement('h6');
-        resourcesHeader.className = 'mt-3 mb-2 resources-header';
-        resourcesHeader.innerHTML = '<i class="bi bi-collection"></i> Related Course';
-        
-        // Add to message
-        lastMessage.appendChild(resourcesHeader);
-        lastMessage.appendChild(card);
-        
-        scrollToBottom();
-    }
-    
-    // Simplified function that just delegates to addCourseResource
-    function addResourceCarousel(resources) {
-        // This function is kept for backward compatibility
-        // but now just delegates to the simpler implementation
-        console.log("Legacy addResourceCarousel called, delegating to simpler implementation");
-        
-        // We're not using this function for new code, but keeping it 
-        // to avoid breaking existing code that might call it
-    }
+    // Resource UI removed per simplification; no resource cards rendered
 
     // Scroll chat to bottom with smooth animation
     function scrollToBottom() {

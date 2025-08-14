@@ -31,6 +31,11 @@
                                 <i class="bi bi-file-earmark-text"></i> Files
                             </a>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="settings-tab" href="{{ url_for('settings_page') }}">
+                                <i class="bi bi-gear"></i> Settings
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <button type="button" class="btn-close" aria-label="Close"></button>
@@ -52,9 +57,9 @@
                                     <div class="file-upload-area mb-3">
                                         <i class="bi bi-cloud-arrow-up fs-1" style="color: var(--bigid-purple);"></i>
                                         <p class="mb-0">Drag & drop files here or click to browse</p>
-                                        <small class="text-muted">Supported formats: .txt, .json, .md, .jsonl, .csv</small>
+                                        <small class="text-muted">Supported formats: .txt, .md, .json, .jsonl, .csv, .docx, .pdf, .xlsx</small>
                                         <small class="d-block text-muted">Hold Ctrl/Cmd to select multiple files</small>
-                                        <input type="file" id="file-input" class="d-none" accept=".txt,.json,.md,.jsonl,.csv" multiple>
+                                        <input type="file" id="file-input" class="d-none" accept=".txt,.md,.json,.jsonl,.csv,.docx,.pdf,.xlsx" multiple>
                                     </div>
                                     
                                     <div id="upload-progress-container" class="d-none mb-3">

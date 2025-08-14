@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 # ============================================================
 # LOGGING CONFIGURATION
@@ -7,7 +7,7 @@ import json
 
 # Logging levels
 LOG_LEVEL = "DEBUG"
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # ============================================================
 # FLASK AND DATABASE CONFIGURATION
@@ -15,13 +15,15 @@ LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
 # Flask settings
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret")
-SERVER_HOST = '0.0.0.0'
+SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 5000
 DEBUG_MODE = True
 
 # Database settings
 # Default to a local SQLite file unless DATABASE_URL is provided
-DATABASE_URI = os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(os.getcwd(), 'rag_agent.db')}"
+DATABASE_URI = (
+    os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(os.getcwd(), 'rag_agent.db')}"
+)
 DATABASE_POOL_RECYCLE = 300
 DATABASE_POOL_PRE_PING = True
 DATABASE_TRACK_MODIFICATIONS = False
@@ -53,12 +55,12 @@ PINECONE_SEARCH_LIMIT = 5
 # FILE UPLOAD AND PROCESSING CONFIGURATIONS
 # ============================================================
 
-# File upload constraints
-ALLOWED_EXTENSIONS = {'txt', 'json', 'md', 'jsonl', 'csv'}
+# File upload constraints (UI defaults; runtime uses settings_service)
+ALLOWED_EXTENSIONS = {"txt", "json", "md", "jsonl", "csv", "docx", "pdf", "xlsx"}
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB max file size
 
 # Knowledge base directory - where files are stored on disk
-KNOWLEDGE_BASE_DIR = os.path.join(os.getcwd(), 'knowledge-base')
+KNOWLEDGE_BASE_DIR = os.path.join(os.getcwd(), "knowledge-base")
 
 # Text chunking for RAG processing
 CHUNK_SIZE = 500  # Size of document chunks in characters
@@ -131,17 +133,13 @@ NO_DOCUMENTS_MESSAGE = "NO DOCUMENTS WERE FOUND IN THE KNOWLEDGE BASE. You must 
 CRITICAL_REMINDER_MESSAGE = "CRITICAL REMINDER: You must ONLY use information from the retrieved documents above. If the information isn't in the documents, say you don't have that information."
 
 # Agent Tool Configuration (Shared)
-AGENT_TOOLS = [{
-    "name": "search_bigid_docs",
-    "description": "Search BigID documentation",
-    "parameters": {
-        "query": {
-            "type": "string",
-            "description": "The search query"
-        }
+AGENT_TOOLS = [
+    {
+        "name": "search_bigid_docs",
+        "description": "Search BigID documentation",
+        "parameters": {"query": {"type": "string", "description": "The search query"}},
     }
-}]
-
+]
 
 
 # ============================================================
@@ -155,16 +153,11 @@ DEFAULT_COURSE_THUMBNAIL = "/static/images/course_thumbnail.svg"
 BOT_WELCOME_MESSAGE = "Welcome! I'm your local RAG assistant. How can I help today?"
 
 # Predefined prompts that appear after the welcome message
-PREDEFINED_PROMPTS = [{
-    "title": "What can you do?",
-    "description": "What types of questions can I ask?"
-}, {
-    "title": "Search docs",
-    "description": "Find info about data sources"
-}, {
-    "title": "Troubleshoot",
-    "description": "Why isn't my index returning results?"
-}]
+PREDEFINED_PROMPTS = [
+    {"title": "What can you do?", "description": "What types of questions can I ask?"},
+    {"title": "Search docs", "description": "Find info about data sources"},
+    {"title": "Troubleshoot", "description": "Why isn't my index returning results?"},
+]
 
 # Convert PREDEFINED_PROMPTS to a JSON string for JavaScript consumption
 PREDEFINED_PROMPTS_JSON = json.dumps(PREDEFINED_PROMPTS)
@@ -182,5 +175,5 @@ THEME_COLORS = {
     "text-dark": "#212529",
     "text-light": "#f8f9fa",
     "text-muted": "#6c757d",
-    "border": "#dee2e6"
+    "border": "#dee2e6",
 }
