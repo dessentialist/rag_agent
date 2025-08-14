@@ -1,10 +1,12 @@
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from database import db
 from models import Setting
+from openai import OpenAI
+from pinecone import Pinecone
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ def _get_setting(key: str) -> Optional[Dict[str, Any]]:
 
     Returns the value JSON dict or None if not present.
     """
-    record = Setting.query.get(key)
+    record = db.session.get(Setting, key)
     return record.value if record else None
 
 
@@ -27,13 +29,13 @@ def _set_setting(key: str, value: Dict[str, Any]) -> None:
     if not isinstance(value, dict):
         raise SettingsValidationError("Settings value must be a JSON object (dict)")
 
-    record = Setting.query.get(key)
+    record = db.session.get(Setting, key)
     if record is None:
-        record = Setting(key=key, value=value, updated_at=datetime.utcnow())
+        record = Setting(key=key, value=value, updated_at=datetime.now(timezone.utc))
         db.session.add(record)
     else:
         record.value = value
-        record.updated_at = datetime.utcnow()
+        record.updated_at = datetime.now(timezone.utc)
     db.session.commit()
     logger.info(f"Saved settings for key='{key}'")
 
@@ -363,3 +365,40 @@ def import_settings_from_dict(settings_blob: Dict[str, Dict[str, Any]]) -> Tuple
             errors.append(f"{key}: {exc}")
 
     return applied, errors
+
+
+def diagnostics_connectivity() -> Dict[str, Any]:
+    """Check external provider connectivity for first-run gating.
+
+    Returns a dict like: {"openai": {"ok": bool, "error": Optional[str]},
+    "pinecone": {"ok": bool, "error": Optional[str]}}
+    """
+    result: Dict[str, Any] = {"openai": {"ok": False}, "pinecone": {"ok": False}}
+
+    # OpenAI connectivity
+    try:
+        cfg = get_openai_settings()
+        api_key = cfg.get("api_key")
+        if api_key:
+            client = OpenAI(api_key=api_key)
+            _ = client.models.list()
+            result["openai"] = {"ok": True}
+        else:
+            result["openai"] = {"ok": False, "error": "missing api_key"}
+    except Exception as exc:  # noqa: BLE001
+        result["openai"] = {"ok": False, "error": str(exc)}
+
+    # Pinecone connectivity
+    try:
+        cfg = get_pinecone_settings()
+        api_key = cfg.get("api_key")
+        if api_key:
+            pc = Pinecone(api_key=api_key)
+            _ = pc.list_indexes()
+            result["pinecone"] = {"ok": True}
+        else:
+            result["pinecone"] = {"ok": False, "error": "missing api_key"}
+    except Exception as exc:  # noqa: BLE001
+        result["pinecone"] = {"ok": False, "error": str(exc)}
+
+    return result

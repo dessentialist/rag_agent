@@ -264,7 +264,7 @@ def get_file_by_id(file_id):
         Tuple of (file_metadata, file_content) or (None, None) if not found
     """
     try:
-        document = Document.query.get(file_id)
+        document = db.session.get(Document, file_id)
         if not document:
             return None, None
 
@@ -285,7 +285,7 @@ def delete_file_by_id(file_id):
         Boolean indicating success
     """
     try:
-        document = Document.query.get(file_id)
+        document = db.session.get(Document, file_id)
         if not document:
             return False
 
@@ -351,7 +351,7 @@ def process_file_for_rag(file_id, filename, content, file_type):
         chunk_ids = []
 
         # Find the document
-        document = Document.query.get(file_id)
+        document = db.session.get(Document, file_id)
         if not document:
             logger.error(f"Document not found for chunking: {file_id}")
             return []

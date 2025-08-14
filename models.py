@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import JSON
 
@@ -15,7 +15,7 @@ class Document(db.Model):
     file_type = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
     file_metadata = db.Column(JSON, default=dict)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationship with chunks
     chunks = db.relationship(
@@ -48,7 +48,7 @@ class DocumentChunk(db.Model):
     chunk_index = db.Column(db.Integer, nullable=False)
     content = db.Column(db.Text, nullable=False)
     vector_id = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
         """Convert the document chunk to a dictionary"""
@@ -71,7 +71,7 @@ class Message(db.Model):
     conversation_id = db.Column(db.String(100), db.ForeignKey("conversations.id"), nullable=False)
     role = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
         """Convert the message to a dictionary"""
@@ -89,8 +89,12 @@ class Conversation(db.Model):
     __tablename__ = "conversations"
 
     id = db.Column(db.String(100), primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationship with messages
     messages = db.relationship(
@@ -117,7 +121,7 @@ class Conversation(db.Model):
         """
         message = Message(conversation_id=self.id, role=role, content=content)
         db.session.add(message)
-        self.updated_at = datetime.now()
+        self.updated_at = datetime.now(timezone.utc)
         return message
 
     def to_dict(self):
@@ -167,4 +171,8 @@ class Agent(db.Model):
     response_format = db.Column(db.String(50), nullable=True)  # e.g., "json_object" or "text"
     selection_rules = db.Column(JSON, default=dict, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

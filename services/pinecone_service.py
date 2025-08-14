@@ -85,6 +85,9 @@ def _get_index():
         return None
 
 
+# Note: connectivity is checked in settings_service.diagnostics_connectivity to avoid circular imports.
+
+
 def upsert_to_pinecone(id, content, metadata=None):
     """
     Generate embeddings for content and upsert to Pinecone

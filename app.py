@@ -52,6 +52,7 @@ from routes.settings_routes import settings_bp
 from services.agent_registry import ensure_default_agents
 from services.settings_service import (
     ensure_default_ui_settings,
+    diagnostics_connectivity,
     get_general_settings,
     get_theme_settings,
     get_ui_settings,
@@ -91,6 +92,10 @@ def index():
     # First-run gating
     status = readiness()
     if not status.get("ready", False):
+        return redirect(url_for("settings_page"))
+    # Enforce connectivity before allowing chat/files per PRD AC1
+    con = diagnostics_connectivity()
+    if not (con.get("openai", {}).get("ok") and con.get("pinecone", {}).get("ok")):
         return redirect(url_for("settings_page"))
     ui = get_ui_settings()
     general = get_general_settings()

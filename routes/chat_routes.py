@@ -46,13 +46,13 @@ def chat():
         # Get or create a conversation
         conversation = None
         if conversation_id:
-            conversation = Conversation.query.get(conversation_id)
+            conversation = db.session.get(Conversation, conversation_id)
 
-        if not conversation:
-            conversation_id = str(uuid.uuid4())
-            conversation = Conversation(id=conversation_id)
-            db.session.add(conversation)
-            db.session.commit()
+            if not conversation:
+                conversation_id = str(uuid.uuid4())
+                conversation = Conversation(id=conversation_id)
+                db.session.add(conversation)
+                db.session.commit()
 
         # Add the user message to the conversation
         conversation.add_message(role="user", content=user_message)
@@ -117,7 +117,12 @@ def chat():
 
         # Return the response and conversation ID (UI simplified, no resources)
         return jsonify(
-            {"response": ai_response, "conversation_id": conversation_id, "next_steps": next_steps}
+            {
+                "response": ai_response,
+                "conversation_id": conversation_id,
+                "next_steps": next_steps,
+                "agent_type": getattr(agent, "name", None),
+            }
         )
 
     except Exception as e:

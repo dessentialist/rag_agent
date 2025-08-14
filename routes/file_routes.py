@@ -235,4 +235,10 @@ def files_page():
     """
     Render the files management page
     """
-    return render_template("files.html")
+    # Align with app.py /files route to include brand and theme
+    from services.settings_service import ensure_default_ui_settings, get_general_settings, get_theme_settings
+
+    ensure_default_ui_settings()
+    general = get_general_settings()
+    theme = get_theme_settings()
+    return render_template("files.html", brand_name=general.get("brand_name", "RAG Agent"), theme=theme)

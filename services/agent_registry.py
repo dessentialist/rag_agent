@@ -42,7 +42,7 @@ def create_agent(
 
 
 def update_agent(agent_id: int, **fields) -> Optional[Agent]:
-    agent = Agent.query.get(agent_id)
+    agent = db.session.get(Agent, agent_id)
     if agent is None:
         return None
     for key, value in fields.items():
@@ -54,7 +54,7 @@ def update_agent(agent_id: int, **fields) -> Optional[Agent]:
 
 
 def delete_agent(agent_id: int) -> bool:
-    agent = Agent.query.get(agent_id)
+    agent = db.session.get(Agent, agent_id)
     if not agent:
         return False
     db.session.delete(agent)

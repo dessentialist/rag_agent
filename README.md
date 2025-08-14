@@ -66,7 +66,7 @@ Most configuration now lives in the Settings store (SQLite). Optionally set:
 1. Clone the repository
 2. Create venv and install: `make venv && make install`
 3. Run the server: `make run`
-4. Open `http://localhost:5000/` — on first run, you will be redirected to the Settings page to configure providers (OpenAI, Pinecone), defaults, theme, and agents. Use the Diagnostics buttons to validate connectivity before chatting.
+4. Open `http://localhost:5000/` — on first run, you will be redirected to the Settings page to configure providers (OpenAI, Pinecone), defaults, theme, and agents. Diagnostics must pass (OpenAI and Pinecone connectivity) before chat/files are enabled.
 
 ## Directory Structure
 
@@ -113,7 +113,7 @@ Most configuration now lives in the Settings store (SQLite). Optionally set:
 - `GET /api/files/<id>`: Get a specific file
 - `DELETE /api/files/<id>`: Delete a file
 - `DELETE /api/files`: Delete all files
-- `POST /api/files/sync`: Sync with the knowledge-base directory
+- `GET/POST /api/files/sync`: Retrieve Pinecone vector DB stats and documents (read-only)
 - `GET /api/files/page`: Render the file management page
 
 ## Usage

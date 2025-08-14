@@ -29,6 +29,7 @@ from services.settings_service import (
     get_theme_settings,
     get_ui_settings,
     import_settings_from_dict,
+    diagnostics_connectivity,
     readiness,
     set_embedding_settings,
     set_general_settings,
@@ -334,23 +335,10 @@ def diagnostics():
     except Exception as exc:
         report["readiness_error"] = str(exc)
 
-    try:
-        cfg = get_openai_settings()
-        api_key = cfg.get("api_key")
-        if api_key:
-            client = OpenAI(api_key=api_key)
-            _ = client.models.list()
-            report["openai"] = {"ok": True}
-        else:
-            report["openai"] = {"ok": False, "error": "missing api_key"}
-    except Exception as exc:
-        report["openai"] = {"ok": False, "error": str(exc)}
-
-    try:
-        initialize_pinecone()
-        report["pinecone"] = {"ok": True}
-    except Exception as exc:
-        report["pinecone"] = {"ok": False, "error": str(exc)}
+    # Connectivity checks (lightweight)
+    connectivity = diagnostics_connectivity()
+    report["openai"] = connectivity.get("openai", {"ok": False})
+    report["pinecone"] = connectivity.get("pinecone", {"ok": False})
 
     report["db"] = {"ok": True}
     return jsonify(report)
