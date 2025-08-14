@@ -1,4 +1,5 @@
 import logging
+
 import pytest
 
 # Skip this module during chunks 4–6 because it requires configured external services
@@ -12,4 +13,3 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("test_agent_selection")
-

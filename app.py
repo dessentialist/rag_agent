@@ -64,7 +64,18 @@ app.register_blueprint(settings_bp)
 
 with app.app_context():
     db.create_all()
-    logger.info("Database tables created successfully")
+    try:
+        import os
+
+        db_path = None
+        if DATABASE_URI.startswith("sqlite:///"):
+            db_path = DATABASE_URI.replace("sqlite:///", "")
+        size_bytes = os.path.getsize(db_path) if db_path and os.path.exists(db_path) else 0
+        logger.info(
+            f"Database tables created successfully. DB URI={DATABASE_URI} size={size_bytes} bytes"
+        )
+    except Exception as _exc:  # noqa: F841
+        logger.info(f"Database tables created successfully. DB URI={DATABASE_URI}")
     # Seed default agents (safe no-op if already present)
     try:
         ensure_default_agents()

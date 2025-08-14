@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 
@@ -16,5 +17,3 @@ def test_app_client():
     with flask_app.app_context():
         client = flask_app.test_client()
         yield client
-
-

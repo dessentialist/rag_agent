@@ -65,6 +65,7 @@ Build a neutral, local‑first Retrieval‑Augmented Generation (RAG) chatbot th
 - Settings & Wizard
   - Sections: General (brand, theme), Providers (OpenAI, Pinecone), LLM defaults, Agents (CRUD), RAG (chunk size/overlap, limits), Database (SQLite/Postgres), Advanced (feature flags), Diagnostics (test connections).
   - First‑run wizard blocks usage until required fields are provided and validated.
+  - Backup & Restore: Admin can export all settings to JSON and import them back via `/api/settings/export` and `/api/settings/import`.
   - No default vendor/model values are baked into agent/model execution; the wizard or settings must explicitly capture choices.
 
 - Multi‑Agent Registry
@@ -81,7 +82,7 @@ Build a neutral, local‑first Retrieval‑Augmented Generation (RAG) chatbot th
   - Configurable chunk size and overlap.
 
 - Storage & Persistence
-  - SQLite (`rag_agent.db`) by default with SQLAlchemy; optional Postgres via `DATABASE_URL`.
+  - SQLite (`rag_agent.db`) by default with SQLAlchemy; optional Postgres via `DATABASE_URL`. DB file path and size are logged at startup for visibility.
   - Pinecone stores embeddings; index creation/validation via settings.
   - Conversations, files, chunks, agents, settings persist across restarts.
 
@@ -174,7 +175,7 @@ Note: Use portable `sqlalchemy.JSON` (not Postgres‑specific types). Timestamps
   - AC3: User uploads a PDF, DOCX, and XLSX; chunks are created; Pinecone stats update; search retrieves relevant text.
   - AC4: Restarting the app preserves settings, agents, conversations, and files; Pinecone data persists.
   - AC5: No resource UI appears; chat answers and next‑steps render correctly.
-  - AC6: `make_lint` and `make test` pass locally.
+  - AC6: `make_lint` and `make test` pass locally; venv can be created via `make venv && make install`.
 
 - Success Metrics (initial)
   - Time to first successful chat from fresh install < 10 minutes.

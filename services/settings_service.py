@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from database import db
 from models import Setting
@@ -280,3 +280,86 @@ def readiness() -> Dict[str, Any]:
 
     ready = len(missing) == 0
     return {"ready": ready, "missing_keys": missing}
+
+
+# --- Export / Import helpers (Chunk 9) ---
+
+
+def export_all_settings() -> Dict[str, Dict[str, Any]]:
+    """Return a raw export of all settings rows as a mapping.
+
+    Keys are the setting keys (e.g., 'general', 'openai'); values are the JSON dicts.
+    """
+    exported: Dict[str, Dict[str, Any]] = {}
+    for record in Setting.query.all():
+        # Values in Setting are guaranteed to be dicts by _set_setting validation
+        exported[record.key] = record.value or {}
+    return exported
+
+
+def import_settings_from_dict(settings_blob: Dict[str, Dict[str, Any]]) -> Tuple[int, List[str]]:
+    """Import settings from a mapping of key -> value dict with validation.
+
+    Returns:
+        (applied_count, errors)
+    """
+    if not isinstance(settings_blob, dict):
+        raise SettingsValidationError("Import payload must be an object mapping keys to values")
+
+    applied = 0
+    errors: List[str] = []
+
+    # Only accept known keys for validation safety
+    for key, value in settings_blob.items():
+        try:
+            if key == "general":
+                set_general_settings(
+                    brand_name=(value or {}).get("brand_name"),
+                    logo_url=(value or {}).get("logo_url"),
+                )
+            elif key == "theme":
+                set_theme_settings(value or {})
+            elif key == "ui":
+                set_ui_settings(
+                    (value or {}).get("welcome_message", ""),
+                    (value or {}).get("predefined_prompts", []),
+                    (value or {}).get("default_course_thumbnail"),
+                )
+            elif key == "openai":
+                set_openai_settings(
+                    api_key=(value or {}).get("api_key"),
+                    llm_model=(value or {}).get("llm_model"),
+                    temperature=(value or {}).get("temperature", 0.3),
+                    max_tokens=(value or {}).get("max_tokens", 1000),
+                    response_format=(value or {}).get("response_format", "json_object"),
+                )
+            elif key == "embedding":
+                set_embedding_settings((value or {}).get("embedding_model"))
+            elif key == "pinecone":
+                set_pinecone_settings(
+                    api_key=(value or {}).get("api_key"),
+                    index_name=(value or {}).get("index_name"),
+                    dimension=int((value or {}).get("dimension")),
+                    metric=(value or {}).get("metric", "cosine"),
+                    cloud=(value or {}).get("cloud", "aws"),
+                    region=(value or {}).get("region", "us-west-2"),
+                    search_limit=int((value or {}).get("search_limit", 5)),
+                )
+            elif key == "rag":
+                set_rag_settings(
+                    chunk_size=int((value or {}).get("chunk_size", 500)),
+                    chunk_overlap=int((value or {}).get("chunk_overlap", 30)),
+                    allowed_extensions=(value or {}).get("allowed_extensions", []),
+                )
+            else:
+                # Unknown keys are ignored to avoid storing unvalidated data
+                continue
+            applied += 1
+        except Exception as exc:  # noqa: BLE001
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            errors.append(f"{key}: {exc}")
+
+    return applied, errors

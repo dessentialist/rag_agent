@@ -1,9 +1,9 @@
 import logging
 
 from flask import Blueprint, jsonify, request
-from database import db
 from openai import OpenAI
 
+from database import db
 from services.agent_registry import (
     create_agent as registry_create_agent,
 )
@@ -20,6 +20,7 @@ from services.pinecone_service import initialize_pinecone
 from services.settings_service import (
     SettingsValidationError,
     ensure_default_ui_settings,
+    export_all_settings,
     get_embedding_settings,
     get_general_settings,
     get_openai_settings,
@@ -27,6 +28,7 @@ from services.settings_service import (
     get_rag_settings,
     get_theme_settings,
     get_ui_settings,
+    import_settings_from_dict,
     readiness,
     set_embedding_settings,
     set_general_settings,
@@ -352,3 +354,34 @@ def diagnostics():
 
     report["db"] = {"ok": True}
     return jsonify(report)
+
+
+# --- Settings Export / Import (Chunk 9) ---
+
+
+@settings_bp.route("/settings/export", methods=["GET"])
+def export_settings():
+    """Export all settings as JSON for backup.
+
+    Does not include any secrets beyond what is already stored in the settings table.
+    """
+    try:
+        payload = export_all_settings()
+        return jsonify(payload), 200
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"/settings/export error: {exc}", exc_info=True)
+        return jsonify({"error": "Failed to export settings"}), 500
+
+
+@settings_bp.route("/settings/import", methods=["POST"])
+def import_settings():
+    """Import settings JSON. Validates and applies known keys only."""
+    try:
+        blob = request.get_json(force=True) or {}
+        applied, errors = import_settings_from_dict(blob)
+        return jsonify({"applied": applied, "errors": errors}), (200 if not errors else 400)
+    except SettingsValidationError as ve:
+        return jsonify({"error": str(ve)}), 400
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"/settings/import error: {exc}", exc_info=True)
+        return jsonify({"error": "Failed to import settings"}), 500

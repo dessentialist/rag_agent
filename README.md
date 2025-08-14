@@ -147,4 +147,4 @@ Logging configuration is centralized in config.py, making it easy to adjust log 
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See the `LICENSE` file for details.

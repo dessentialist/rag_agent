@@ -1,5 +1,4 @@
 import json
-from io import BytesIO
 
 import pytest
 
@@ -99,5 +98,3 @@ def test_pdf_parser_pages(tmp_path):
     # Even blank pages produce a [Page 1] marker
     assert "[Page 1]" in parsed
     assert meta == {}
-
-

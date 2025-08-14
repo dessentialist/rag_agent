@@ -25,7 +25,7 @@ format:
 	$(VENV)/bin/black .
 
 test:
-	$(PY) -m pytest -q || true
+	$(PY) -m pytest -q
 
 clean:
 	rm -rf $(VENV) rag_agent.db __pycache__ **/__pycache__ .pytest_cache

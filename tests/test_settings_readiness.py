@@ -1,14 +1,11 @@
+from database import db
+from models import Setting
 from services.settings_service import (
-    get_openai_settings,
-    get_embedding_settings,
-    get_pinecone_settings,
     readiness,
-    set_openai_settings,
     set_embedding_settings,
+    set_openai_settings,
     set_pinecone_settings,
 )
-from models import Setting
-from database import db
 
 
 def _clear_settings():
@@ -31,6 +28,7 @@ def test_readiness_becomes_ready_after_settings(test_app_client):
     # Provide minimal required settings
     # Ensure no lingering failed transactions
     from database import db
+
     try:
         db.session.rollback()
     except Exception:
@@ -50,5 +48,3 @@ def test_readiness_becomes_ready_after_settings(test_app_client):
     status = readiness()
     assert status["ready"] is True
     assert status["missing_keys"] == []
-
-

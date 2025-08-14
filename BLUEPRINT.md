@@ -1,8 +1,8 @@
-# BigID University AI Tutor - Blueprint
+# RAG Agent – Blueprint
 
 This document serves as a working record of changes, decisions, and development progress for the BigID University AI Tutor application. It will be updated as the project evolves to maintain a comprehensive record of the system architecture and implementation decisions.
 
-**Last Updated:** April 29, 2025
+**Last Updated:** August 14, 2025
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ This document serves as a working record of changes, decisions, and development 
 
 ## Project Overview
 
-The BigID University AI Tutor is an advanced document management and tutoring system that leverages Retrieval-Augmented Generation (RAG) technology for intelligent document interaction and knowledge base synchronization. The system allows users to:
+This project is a neutral, local‑first, configurable RAG chatbot. It leverages Retrieval‑Augmented Generation (RAG) for intelligent interaction with a local knowledge base. The system allows users to:
 
 - Upload and manage documents related to BigID University
 - Chat with an AI assistant that provides answers based on the knowledge base
@@ -34,7 +34,7 @@ The BigID University AI Tutor is an advanced document management and tutoring sy
 - **Vector Database Storage**: Document chunks are stored in Pinecone vector database for semantic retrieval
 - **Semantic Search**: Uses vector embeddings to find the most relevant information for user queries
 - **Comprehensive Logging**: Detailed logs for chat conversations, RAG retrieval, API calls, file operations, and vector operations
-- **Centralized Configuration**: All application settings are centralized in config.py for easy maintenance and optimization
+- **Centralized Configuration**: Runtime settings are stored in SQLite and accessed via `services/settings_service.py` (no hardcoded defaults in execution paths)
 
 ## System Architecture
 
@@ -44,7 +44,7 @@ The application follows a modular architecture with clean separation between com
 - **Backend**: Flask-based Python server with RESTful API endpoints
 - **Database**: SQLite by default via SQLAlchemy (Postgres optional via `DATABASE_URL`)
 - **Vector Storage**: Pinecone vector database for semantic search capabilities
-- **Document Storage**: PostgreSQL database for document content and metadata
+- **Document Storage**: Stored in the same RDBMS (SQLite by default) via SQLAlchemy models
 - **AI Services**: OpenAI API integration for embeddings and LLM capabilities
 
 ### Architecture Diagram
@@ -60,7 +60,7 @@ The application follows a modular architecture with clean separation between com
                                   v
                           +-------------------+     +-------------------+
                           |                   |     |                   |
-                          |  PostgreSQL       |<--->|  Pinecone         |
+                           |  SQLite/Postgres  |<--->|  Pinecone         |
                           |  Database         |     |  Vector Database  |
                           |                   |     |                   |
                           +-------------------+     +-------------------+
@@ -76,7 +76,7 @@ The application follows a modular architecture with clean separation between com
 
 ## Database Schema
 
-The application uses a PostgreSQL database with the following tables:
+The application uses SQLite by default with the following tables (portable JSON types via SQLAlchemy):
 
 ### Documents Table
 Stores information about uploaded files in the knowledge base.

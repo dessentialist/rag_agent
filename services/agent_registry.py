@@ -142,29 +142,36 @@ def ensure_default_agents() -> None:
         "Respond in compact JSON with keys 'main' and 'next_steps'."
     )
 
-    create_agent(
-        name="documentation",
-        description="Agent specialized for technical documentation",
-        role_system_prompt=(
-            rag_rigor
-            + " Prefer concise technical explanations. Include document references inline."
-        ),
-        llm_model="gpt-4o",
-        temperature=0.3,
-        max_tokens=1200,
-        response_format="json_object",
-        selection_rules={"doc_type_any_of": ["documentation"]},
-    )
+    try:
+        create_agent(
+            name="documentation",
+            description="Agent specialized for technical documentation",
+            role_system_prompt=(
+                rag_rigor
+                + " Prefer concise technical explanations. Include document references inline."
+            ),
+            llm_model="gpt-4o",
+            temperature=0.3,
+            max_tokens=1200,
+            response_format="json_object",
+            selection_rules={"doc_type_any_of": ["documentation"]},
+        )
 
-    create_agent(
-        name="course",
-        description="Agent specialized for course/help content",
-        role_system_prompt=(
-            rag_rigor + " Provide helpful, friendly tone and actionable next steps."
-        ),
-        llm_model="gpt-4o",
-        temperature=0.4,
-        max_tokens=1200,
-        response_format="json_object",
-        selection_rules={"doc_type_any_of": ["course"]},
-    )
+        create_agent(
+            name="course",
+            description="Agent specialized for course/help content",
+            role_system_prompt=(
+                rag_rigor + " Provide helpful, friendly tone and actionable next steps."
+            ),
+            llm_model="gpt-4o",
+            temperature=0.4,
+            max_tokens=1200,
+            response_format="json_object",
+            selection_rules={"doc_type_any_of": ["course"]},
+        )
+    except Exception as exc:  # noqa: BLE001
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        logger.warning(f"Seeding default agents failed: {exc}")

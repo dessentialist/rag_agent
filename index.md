@@ -13,9 +13,9 @@ rag_agent/
   routes/
     chat_routes.py       # /api/chat, conversations CRUD; readiness guard; agent selection via registry
     file_routes.py       # /api/files endpoints; allowed types from settings
-    settings_routes.py   # Settings CRUD APIs, agent CRUD, diagnostics (/api/settings/*, /api/diagnostics)
+    settings_routes.py   # Settings CRUD APIs, agent CRUD, diagnostics (/api/settings/*, /api/diagnostics), settings backup & restore (/api/settings/export, /api/settings/import)
   services/
-    settings_service.py  # Typed getters/setters with validation; readiness; default UI seeding
+    settings_service.py  # Typed getters/setters with validation; readiness; default UI seeding; export_all_settings(); import_settings_from_dict()
     agent_registry.py    # CRUD helpers, rule matching, default agent seeding
     agno_service.py      # generate_response(agent_cfg, query, docs) using agent params
     embeddings_service.py# OpenAI embeddings using model from settings

@@ -172,14 +172,14 @@ Guidelines/Patterns
 Changes
 - Add `Makefile` targets:
   - `make venv` (create and upgrade venv), `make install`, `make run`, `make dev`, `make lint`, `make format`, `make test`, `make clean`.
-- Add `ruff` and `black`; define `make_lint` to run formatting and lint checks.
+- Add `ruff` and `black`; define `make_lint` to run formatting and lint checks. `Makefile` `test` target fails on errors (no silent `|| true`).
 - Add `pytest` with a `tests/` folder structure.
 - Add `LICENSE` (MIT) and update README accordingly.
 - Remove `replit.nix`; rename project in `pyproject.toml`; add dependencies for new parsers.
 
 Success criteria
 - Fresh clone to run: `make venv && make install && make run` works on macOS.
-- `make_lint` passes; `make test` passes.
+- `make_lint` passes; `make test` passes; `LICENSE` present and referenced in README.
 
 Testing
 - CI-like local runs of `make_lint` and `make test`.
@@ -199,11 +199,11 @@ Changes
   - Settings: CRUD, validation, first-run readiness.
   - Agents: CRUD, selection logic with document metadata fixtures.
   - Ingestion: unit tests per file type; integration across Pinecone upsert + search (mock embeddings when running offline).
-  - Chat: route selection and response handling with an injected fake OpenAI client for deterministic outputs.
+  - Chat: route selection and response handling with an injected fake OpenAI client for deterministic outputs. (Deferred to v1.x; current tests avoid external calls.)
 - Add fixtures for sample files (small, synthetic, non-sensitive).
 
 Success criteria
-- >90% coverage on services; deterministic tests without external network by default.
+- >90% coverage goal on services (tracked separately); deterministic tests without external network by default.
 
 Testing
 - Use dependency injection to swap `OpenAI` and `Pinecone` with fakes/mocks; add a `TEST_MODE` flag in settings.
@@ -221,15 +221,17 @@ Guidelines/Patterns
 Changes
 - Confirm SQLite file path (`rag_agent.db`) is outside ephemeral dirs and checked in `.gitignore`.
 - Ensure SQLAlchemy sessions commit after writes and rollback on errors universally.
-- Add backup/export endpoint for settings (JSON download) and import (with validation).
+- Add backup/export endpoint for settings (JSON download) and import (with validation):
+  - GET `/api/settings/export` → settings JSON
+  - POST `/api/settings/import` → applies known keys via validators; returns `{applied, errors}`
 
 Success criteria
 - Stopping/restarting the app retains all settings, agents, files metadata, conversations.
-- Export/import round-trips settings without loss.
+- Export/import round-trips settings without loss (validated by tests).
 
 Testing
 - Kill-and-restart manual test; verify persisted state.
-- Export/import tests compare JSON snapshots.
+- Export/import tests compare JSON snapshots (`tests/test_settings_export_import.py`).
 
 Debugging
 - Add DB connection and migration logs; include file path and size for visibility.
