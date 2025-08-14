@@ -1,0 +1,16 @@
+RAG Agent Overview
+
+This is a documentation file for the RAG Agent demo.
+
+Key facts:
+- The retrieval pipeline includes: chunking, embedding, and vector search.
+- Pinecone is used as the vector database with cosine similarity.
+- OpenAI's text-embedding-3-small model generates 1536-dim embeddings.
+- Responses must only use retrieved document content.
+
+FAQ:
+Q: What vector database is used?
+A: Pinecone.
+
+Q: What are the major steps?
+A: Chunking, embedding, and vector search.

@@ -161,7 +161,9 @@ def delete_from_pinecone(id):
 
 def list_all_vectors():
     """
-    List all vectors in Pinecone with their metadata
+    List all vectors in Pinecone with their metadata by paging through the
+    vector IDs and fetching metadata in batches. This avoids using a dummy
+    query vector and is robust for any index contents.
 
     Returns:
         Dictionary with document stats and list of unique documents
@@ -172,56 +174,108 @@ def list_all_vectors():
             logger.error("[LIST] Pinecone index is not initialized")
             return {"stats": {"total_chunks": 0, "unique_files": 0}, "documents": []}
 
-        # Initialize empty list to store vectors
-        all_documents = []
+        # Iterate over all vector IDs using the server-side paginator
+        # Then batch-fetch metadata to build aggregates.
+        batch_size = 500  # conservative fetch batch size
+        page_limit = 1000  # list page size for ids
 
-        # Use query with a dummy vector to get vectors from the index
-        cfg = get_pinecone_settings()
-        dimension = int(cfg.get("dimension", 1536))
-        response = index.query(
-            vector=[0.0] * dimension,  # Dummy vector with floats
-            top_k=1000,  # Return up to 1000 results
-            include_metadata=True,
-        )
+        # Collect IDs via pagination
+        all_ids: list[str] = []
+        next_token = None
+        while True:
+            try:
+                if next_token:
+                    page = index.list_paginated(limit=page_limit, pagination_token=next_token)
+                else:
+                    page = index.list_paginated(limit=page_limit)
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"[LIST] list_paginated error: {exc}")
+                break
 
-        if not hasattr(response, "matches") or not response.matches:
+            page_dict = page.to_dict() if hasattr(page, "to_dict") else {}
+            vector_summaries = page_dict.get("vectors", []) or []
+            ids_in_page = [v.get("id") for v in vector_summaries if isinstance(v, dict) and v.get("id")]
+            all_ids.extend(ids_in_page)
+
+            # Attempt to discover pagination token in a robust way
+            # Pinecone SDK typically exposes {'pagination': {'next': '...'}} or similar; fall back if absent
+            token = None
+            if "pagination" in page_dict and isinstance(page_dict["pagination"], dict):
+                token = page_dict["pagination"].get("next") or page_dict["pagination"].get("token")
+            elif hasattr(page, "pagination"):
+                try:
+                    token_obj = getattr(page, "pagination")
+                    if token_obj is not None:
+                        token = getattr(token_obj, "next", None) or getattr(token_obj, "token", None)
+                except Exception:
+                    token = None
+
+            logger.debug(
+                "[LIST] Page fetched",
+            )
+            logger.info(
+                f"[LIST] Accumulated IDs: {len(all_ids)} (+{len(ids_in_page)}), next_token={'yes' if token else 'no'}"
+            )
+
+            if token:
+                next_token = token
+                continue
+            break
+
+        if not all_ids:
             logger.info("[LIST] No vectors found in Pinecone")
             return {"stats": {"total_chunks": 0, "unique_files": 0}, "documents": []}
 
-        # Track unique document IDs
-        unique_files = set()
-        for match in response.matches:
-            if hasattr(match, "metadata") and match.metadata and "source_file_id" in match.metadata:
-                source_id = match.metadata.get("source_file_id")
-                unique_files.add(source_id)
+        # Fetch metadata in batches
+        all_documents = []
+        unique_files: set[str] = set()
+        total_chunks = 0
 
-                # Check if we've already added this document
-                doc_exists = False
-                for doc in all_documents:
-                    if doc.get("file_id") == source_id:
-                        doc_exists = True
-                        # Update chunk count
-                        doc["chunks"] += 1
-                        break
+        for i in range(0, len(all_ids), batch_size):
+            batch_ids = all_ids[i : i + batch_size]
+            try:
+                fetched = index.fetch(ids=batch_ids)
+            except Exception as exc:  # noqa: BLE001
+                logger.error(f"[LIST] fetch batch error: {exc}")
+                continue
 
-                # If document doesn't exist in our list, add it
-                if not doc_exists:
+            vectors = {}
+            # fetch response exposes `.vectors` mapping id -> Vector
+            if hasattr(fetched, "vectors"):
+                vectors = fetched.vectors or {}
+            elif isinstance(fetched, dict):
+                vectors = fetched.get("vectors", {}) or {}
+
+            for vid, v in vectors.items():
+                total_chunks += 1
+                md = getattr(v, "metadata", None) or {}
+                source_id = md.get("source_file_id")
+                if not source_id:
+                    # Not a RAG chunk we produced; skip aggregation but count chunk
+                    continue
+                if source_id not in unique_files:
+                    unique_files.add(source_id)
                     all_documents.append(
                         {
                             "file_id": source_id,
-                            "filename": match.metadata.get("source_filename", "Unknown"),
+                            "filename": md.get("source_filename", "Unknown"),
                             "chunks": 1,
-                            "vector_id": match.id,
-                            "title": match.metadata.get("title", "Unknown"),
+                            "vector_id": vid,
+                            "title": md.get("title", "Unknown"),
                         }
                     )
+                else:
+                    # increment chunk count for this file
+                    for doc in all_documents:
+                        if doc.get("file_id") == source_id:
+                            doc["chunks"] = int(doc.get("chunks", 0)) + 1
+                            break
 
-        # Sort documents by filename
-        all_documents.sort(key=lambda x: x.get("filename", "").lower())
+        # Sort documents by filename for stable display
+        all_documents.sort(key=lambda x: (x.get("filename") or "").lower())
 
-        # Construct the result
         result = {
-            "stats": {"total_chunks": len(response.matches), "unique_files": len(unique_files)},
+            "stats": {"total_chunks": total_chunks, "unique_files": len(unique_files)},
             "documents": all_documents,
         }
 
@@ -252,12 +306,12 @@ def semantic_search(query, limit=None):
             logger.error("[SEARCH] Pinecone index is not initialized")
             return []
 
-        # Log search query
-        logger.info(f"[SEARCH] Performing semantic search for query: '{query}'")
+        # Log search query (structured)
+        logger.info(f"[SEARCH] Performing semantic search", extra={"event": "semantic_search", "query": query})
         if limit is None:
             cfg = get_pinecone_settings()
             limit = int(cfg.get("search_limit", 5))
-        logger.info(f"[SEARCH] Requested {limit} results")
+        logger.debug(f"[SEARCH] Requested {limit} results")
 
         # Generate embeddings for the query
         query_embedding = generate_embeddings(query)
@@ -270,12 +324,24 @@ def semantic_search(query, limit=None):
 
         # Log search results summary
         if hasattr(results, "matches") and results.matches:
-            logger.info(f"[SEARCH] Found {len(results.matches)} matching documents")
+            logger.info(
+                f"[SEARCH] Found {len(results.matches)} matching documents",
+                extra={"event": "search_results", "count": len(results.matches)},
+            )
             for i, match in enumerate(results.matches):
                 score_percentage = round(match.score * 100, 2)
-                logger.info(f"[SEARCH] Match {i+1}: ID={match.id}, Similarity={score_percentage}%")
+                logger.debug(
+                    f"[SEARCH] Match {i+1}: ID={match.id}, Similarity={score_percentage}%",
+                    extra={
+                        "event": "search_match",
+                        "rank": i + 1,
+                        "id": match.id,
+                        "score": match.score,
+                        "similarity_pct": score_percentage,
+                    },
+                )
         else:
-            logger.warning(f"[SEARCH] No matching documents found for query: '{query}'")
+            logger.warning(f"[SEARCH] No matching documents found for query", extra={"event": "search_no_match", "query": query})
 
         # Extract and return the results
         documents = []

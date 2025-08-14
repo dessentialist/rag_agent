@@ -72,9 +72,15 @@ def generate_response(
         max_tokens = int(agent_cfg.max_tokens)
         response_format = {"type": agent_cfg.response_format or "json_object"}
 
-        logger.info(f"[API] Calling OpenAI with model={model}, messages={len(messages)}")
+        logger.info(
+            f"[API] Calling OpenAI with model={model}, messages={len(messages)}",
+            extra={"event": "openai_call", "model": model, "messages": len(messages)},
+        )
         summary = [{"role": m["role"], "len": len(m["content"])} for m in messages]
-        logger.info(f"[API] Message summary: {json.dumps(summary)}")
+        logger.debug(
+            f"[API] Message summary: {json.dumps(summary)}",
+            extra={"event": "openai_message_summary", "summary": summary},
+        )
 
         response = _get_client().chat.completions.create(
             model=model,

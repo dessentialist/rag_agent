@@ -50,6 +50,7 @@ from routes.chat_routes import chat_bp
 from routes.file_routes import file_bp
 from routes.settings_routes import settings_bp
 from services.agent_registry import ensure_default_agents
+from services.seed_service import ensure_sample_content
 from services.settings_service import (
     ensure_default_ui_settings,
     diagnostics_connectivity,
@@ -82,6 +83,12 @@ with app.app_context():
         ensure_default_agents()
     except Exception as e:
         logger.warning(f"Could not seed default agents: {e}")
+
+    # Optionally seed a minimal sample document and a cute agent on first run
+    try:
+        ensure_sample_content()
+    except Exception as e:
+        logger.warning(f"Could not seed sample content: {e}")
 
 
 # Serve the main page

@@ -394,7 +394,15 @@ def process_file_for_rag(file_id, filename, content, file_type):
         # Commit the chunks to the database
         db.session.commit()
 
-        logger.debug(f"File processed for RAG: {filename} (ID: {file_id}, Chunks: {len(chunks)})")
+        logger.info(
+            f"[EMBEDDING] File processed for RAG", 
+            extra={
+                "event": "file_processed",
+                "file_id": file_id,
+                "filename": filename,
+                "chunk_count": len(chunks),
+            },
+        )
         return chunk_ids
 
     except Exception as e:

@@ -114,15 +114,24 @@ def select_agent_for_request(
         return None, None
 
     doc_types = _doc_types_from_results(relevant_docs)
-    logger.info(f"Evaluating selection rules against doc_types={doc_types}")
+    logger.info(
+        f"Evaluating selection rules against doc_types={doc_types}",
+        extra={"event": "agent_select_eval", "doc_types": doc_types, "query": user_query},
+    )
 
     for agent in agents:
         rules = agent.selection_rules or {}
         if _matches_rules(rules, doc_types, user_query):
-            logger.info(f"Selected agent '{agent.name}' via rules={rules}")
+            logger.info(
+                f"Selected agent '{agent.name}' via rules={rules}",
+                extra={"event": "agent_selected", "agent": agent.name, "rules": rules},
+            )
             return agent, rules
 
-    logger.warning("No selection_rules matched for any agent")
+    logger.warning(
+        "No selection_rules matched for any agent",
+        extra={"event": "agent_select_none", "doc_types": doc_types, "query": user_query},
+    )
     return None, None
 
 
@@ -169,6 +178,24 @@ def ensure_default_agents() -> None:
             response_format="json_object",
             selection_rules={"doc_type_any_of": ["course"]},
         )
+        # Seed a cute agent variant for documentation to showcase selection rules
+        try:
+            create_agent(
+                name="friendly-puppy",
+                description="A cute and helpful documentation agent",
+                role_system_prompt=(
+                    "You are a strict RAG agent. Use ONLY retrieved documents. "
+                    "Respond in compact JSON with keys 'main' and 'next_steps'."
+                ),
+                llm_model="gpt-4o",
+                temperature=0.3,
+                max_tokens=800,
+                response_format="json_object",
+                selection_rules={"doc_type_any_of": ["documentation"]},
+            )
+        except Exception:
+            # ignore if it already exists or creation fails independently
+            pass
     except Exception as exc:  # noqa: BLE001
         try:
             db.session.rollback()
