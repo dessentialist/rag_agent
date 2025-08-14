@@ -1,19 +1,8 @@
-import os
 import logging
 import uuid
+from typing import Optional
 from pinecone import Pinecone, ServerlessSpec
-from config import (
-    PINECONE_API_KEY, 
-    PINECONE_ENVIRONMENT, 
-    PINECONE_INDEX_NAME,
-    PINECONE_DIMENSION,
-    PINECONE_METRIC,
-    PINECONE_CLOUD,
-    PINECONE_REGION,
-    PINECONE_SEARCH_LIMIT,
-    LOG_LEVEL,
-    LOG_FORMAT
-)
+from services.settings_service import get_pinecone_settings, SettingsValidationError
 from services.embeddings_service import generate_embeddings
 
 # Configure logging
@@ -21,47 +10,75 @@ logger = logging.getLogger(__name__)
 # Logging is already configured in app.py
 logger.debug("Pinecone service logger configured with console output")
 
-# Initialize Pinecone client
-pc = Pinecone(api_key=PINECONE_API_KEY)
+_pc: Optional[Pinecone] = None
+_index = None
 
 # Create the index if it doesn't exist
+def _get_pinecone_client() -> Pinecone:
+    cfg = get_pinecone_settings()
+    api_key = cfg.get("api_key")
+    if not api_key:
+        raise SettingsValidationError("Pinecone API key is not configured. Please set it in settings.")
+    global _pc
+    if _pc is None:
+        _pc = Pinecone(api_key=api_key)
+    return _pc
+
+
 def initialize_pinecone():
     """
     Initialize Pinecone and create the index if it doesn't exist
     """
     try:
-        # Check if the index exists
+        cfg = get_pinecone_settings()
+        index_name = cfg.get("index_name")
+        dimension = cfg.get("dimension")
+        metric = cfg.get("metric", "cosine")
+        cloud = cfg.get("cloud", "aws")
+        region = cfg.get("region", "us-west-2")
+        if not index_name or not dimension:
+            raise SettingsValidationError("Pinecone index_name and dimension are required in settings.")
+
+        pc = _get_pinecone_client()
         all_indexes = pc.list_indexes()
-        if PINECONE_INDEX_NAME not in [idx.name for idx in all_indexes]:
-            logger.info(f"Creating Pinecone index: {PINECONE_INDEX_NAME}")
+        if index_name not in [idx.name for idx in all_indexes]:
+            logger.info(f"Creating Pinecone index: {index_name}")
             
             # Create the index
             pc.create_index(
-                name=PINECONE_INDEX_NAME,
-                dimension=PINECONE_DIMENSION,
-                metric=PINECONE_METRIC,
+                name=index_name,
+                dimension=int(dimension),
+                metric=metric,
                 spec=ServerlessSpec(
-                    cloud=PINECONE_CLOUD,
-                    region=PINECONE_REGION
+                    cloud=cloud,
+                    region=region
                 )
             )
-            logger.info(f"Pinecone index {PINECONE_INDEX_NAME} created successfully")
+            logger.info(f"Pinecone index {index_name} created successfully")
         else:
-            logger.info(f"Pinecone index {PINECONE_INDEX_NAME} already exists")
+            logger.info(f"Pinecone index {index_name} already exists")
     
     except Exception as e:
         logger.error(f"Error initializing Pinecone: {str(e)}", exc_info=True)
         raise
 
-# Initialize Pinecone on module import
-try:
-    initialize_pinecone()
-    # Connect to the index
-    index = pc.Index(PINECONE_INDEX_NAME)
-    logger.info(f"Connected to Pinecone index: {PINECONE_INDEX_NAME}")
-except Exception as e:
-    logger.error(f"Failed to initialize Pinecone: {str(e)}", exc_info=True)
-    index = None
+def _get_index():
+    global _index
+    if _index is not None:
+        return _index
+    cfg = get_pinecone_settings()
+    index_name = cfg.get("index_name")
+    if not index_name:
+        raise SettingsValidationError("Pinecone index_name is not configured.")
+    pc = _get_pinecone_client()
+    try:
+        initialize_pinecone()
+        _index = pc.Index(index_name)
+        logger.info(f"Connected to Pinecone index: {index_name}")
+        return _index
+    except Exception as e:
+        logger.error(f"Failed to initialize Pinecone: {str(e)}", exc_info=True)
+        return None
 
 def upsert_to_pinecone(id, content, metadata=None):
     """
@@ -76,6 +93,7 @@ def upsert_to_pinecone(id, content, metadata=None):
         Boolean indicating success
     """
     try:
+        index = _get_index()
         if index is None:
             logger.error("[EMBEDDING] Pinecone index is not initialized")
             return False
@@ -124,6 +142,7 @@ def delete_from_pinecone(id):
         Boolean indicating success
     """
     try:
+        index = _get_index()
         if index is None:
             logger.error("Pinecone index is not initialized")
             return False
@@ -146,6 +165,7 @@ def list_all_vectors():
         Dictionary with document stats and list of unique documents
     """
     try:
+        index = _get_index()
         if index is None:
             logger.error("[LIST] Pinecone index is not initialized")
             return {"stats": {"total_chunks": 0, "unique_files": 0}, "documents": []}
@@ -154,8 +174,10 @@ def list_all_vectors():
         all_documents = []
         
         # Use query with a dummy vector to get vectors from the index
+        cfg = get_pinecone_settings()
+        dimension = int(cfg.get("dimension", 1536))
         response = index.query(
-            vector=[0.0] * PINECONE_DIMENSION,  # Dummy vector with floats
+            vector=[0.0] * dimension,  # Dummy vector with floats
             top_k=1000,                        # Return up to 1000 results
             include_metadata=True
         )
@@ -209,7 +231,7 @@ def list_all_vectors():
         logger.error(f"[LIST] Error listing vectors from Pinecone: {str(e)}", exc_info=True)
         return {"stats": {"total_chunks": 0, "unique_files": 0}, "documents": []}
 
-def semantic_search(query, limit=PINECONE_SEARCH_LIMIT):
+def semantic_search(query, limit=None):
     """
     Perform semantic search using Pinecone
     
@@ -221,12 +243,16 @@ def semantic_search(query, limit=PINECONE_SEARCH_LIMIT):
         List of documents with content and metadata
     """
     try:
+        index = _get_index()
         if index is None:
             logger.error("[SEARCH] Pinecone index is not initialized")
             return []
         
         # Log search query
         logger.info(f"[SEARCH] Performing semantic search for query: '{query}'")
+        if limit is None:
+            cfg = get_pinecone_settings()
+            limit = int(cfg.get("search_limit", 5))
         logger.info(f"[SEARCH] Requested {limit} results")
         
         # Generate embeddings for the query

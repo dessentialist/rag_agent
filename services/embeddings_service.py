@@ -1,15 +1,24 @@
-import os
 import logging
+from typing import List
 from openai import OpenAI
-from config import OPENAI_API_KEY, EMBEDDING_MODEL
+from services.settings_service import get_openai_settings, get_embedding_settings, SettingsValidationError
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Initialize the OpenAI client for embeddings
-client = OpenAI(api_key=OPENAI_API_KEY)
+def _get_client() -> OpenAI:
+    """Create an OpenAI client using API key from settings.
 
-def generate_embeddings(text):
+    Raises a SettingsValidationError if the API key is missing, so callers can
+    surface a clear configuration error rather than a runtime crash.
+    """
+    cfg = get_openai_settings()
+    api_key = cfg.get("api_key")
+    if not api_key:
+        raise SettingsValidationError("OpenAI API key is not configured. Please set it in settings.")
+    return OpenAI(api_key=api_key)
+
+def generate_embeddings(text: str) -> List[float]:
     """
     Generate embeddings for a text using OpenAI's embedding model
     
@@ -20,8 +29,13 @@ def generate_embeddings(text):
         List of embedding values
     """
     try:
-        response = client.embeddings.create(
-            model=EMBEDDING_MODEL,
+        embed_cfg = get_embedding_settings()
+        embedding_model = embed_cfg.get("embedding_model")
+        if not embedding_model:
+            raise SettingsValidationError("Embedding model is not configured. Please set it in settings.")
+
+        response = _get_client().embeddings.create(
+            model=embedding_model,
             input=text
         )
         return response.data[0].embedding

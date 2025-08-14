@@ -141,7 +141,7 @@ Build a neutral, local‑first Retrieval‑Augmented Generation (RAG) chatbot th
 ### 8) Data Model (High‑Level)
 
 - settings: key (str, PK), value (JSON), updated_at (datetime)
-- agents: id (str), name, description, role_system_prompt, llm_model, temperature, max_tokens, response_format (JSON), selection_rules (JSON), created_at, updated_at
+- agents: id (int), name, description, role_system_prompt, llm_model, temperature, max_tokens, response_format (string), selection_rules (JSON), created_at, updated_at
 - documents: id (str), filename, file_type, content (text), metadata (JSON), created_at
 - document_chunks: id (str), document_id (fk), chunk_index (int), content (text), vector_id (str), created_at
 - conversations: id (str), created_at, updated_at

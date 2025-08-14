@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const thumbnail = document.createElement('img');
         thumbnail.className = 'course-thumbnail';
         thumbnail.src = DEFAULT_COURSE_THUMBNAIL; // Use the default thumbnail from config
-        thumbnail.alt = 'BigID University Course Thumbnail';
+        thumbnail.alt = 'Course Thumbnail';
         
         thumbnailContainer.appendChild(thumbnail);
         card.appendChild(thumbnailContainer);

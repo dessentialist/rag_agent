@@ -1,9 +1,10 @@
 import logging
 import json
 import uuid
-import asyncio
 from flask import Blueprint, request, jsonify
-from services.agno_service import select_agent_by_doc_type, doc_agent, course_agent
+from services.settings_service import readiness
+from services.agent_registry import select_agent_for_request
+from services.agno_service import generate_response
 from services.pinecone_service import semantic_search
 from models import Message, Conversation
 from database import db
@@ -56,9 +57,11 @@ def chat():
         conversation.add_message(role="user", content=user_message)
         db.session.commit()
 
-        # Create an event loop for async operation
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # If app isn't ready, short-circuit with a clear error
+        ready_state = readiness()
+        if not ready_state.get('ready', False):
+            logger.warning(f"Chat blocked; missing settings: {ready_state.get('missing_keys')}")
+            return jsonify({'error': 'App is not configured. Please complete settings.', 'missing_keys': ready_state.get('missing_keys', [])}), 503
 
         # First, search for relevant documents to determine the agent to use
         logger.info("Searching for relevant documents to determine the appropriate agent")
@@ -67,53 +70,22 @@ def chat():
         # Log basic information about the search results
         logger.info(f"Retrieved {len(relevant_docs)} documents for agent selection")
         
-        # Select the appropriate agent based solely on document Type value
-        selected_agent = select_agent_by_doc_type(relevant_docs)
-        
-        # Set agent_type string based on the selected agent
-        if selected_agent == doc_agent:
-            agent_type = "documentation"
-            logger.info("Selected documentation agent based on document Type value")
-        else:
-            agent_type = "course"
-            logger.info("Selected course agent (default if no documentation Type found)")
-        
-        # Generate a response using the selected Agno agent
-        # Pass the pre-retrieved documents to avoid duplicate search
-        logger.info(f"Generating response with selected agent for: {user_message}")
-        context = {'relevant_docs': relevant_docs, 'agent_type': agent_type}
-        agno_response = loop.run_until_complete(
-            selected_agent.run(user_message, context=context))
-        logger.debug(f"Raw Agno response: {json.dumps(agno_response, indent=2)}")
+        # Select the agent via registry
+        agent, rules = select_agent_for_request(relevant_docs, user_message)
+        if not agent:
+            return jsonify({'error': 'No agent matched selection rules. Define a default rule.'}), 400
+        agno_response = generate_response(agent, user_message, relevant_docs)
+        logger.debug(f"Raw response: {json.dumps(agno_response, indent=2)}")
 
         # Extract main content and resources from the Agno response
         if isinstance(agno_response, dict):
             ai_response = agno_response.get(
                 'main', 'I apologize, I could not generate a proper response.')
 
-            # Extract resources - simplified to just get a URL string for course agent
-            resources = None
-            resource_links = agno_response.get('resources', [])
-            
-            # For course agent, extract the first URL as a simple string
-            if agent_type == "course" and resource_links:
-                # Simplify resource handling to just extract a single URL for course agent
-                if isinstance(resource_links, list) and len(resource_links) > 0:
-                    # Get the first resource URL
-                    if isinstance(resource_links[0], dict) and 'url' in resource_links[0]:
-                        resources = resource_links[0]['url']
-                    elif isinstance(resource_links[0], str):
-                        resources = resource_links[0]
-                elif isinstance(resource_links, str):
-                    # If it's just a URL string
-                    resources = resource_links
-            
-            # Extract next steps
             next_steps = agno_response.get('next_steps', [])
 
         else:
             ai_response = "I apologize, I could not generate a proper response."
-            resources = []
             next_steps = []
 
         # Add the AI response to the conversation
@@ -127,26 +99,11 @@ def chat():
         else:
             logger.info(f"AI response: {ai_response}")
         
-        # Safely log resource information
-        if resources:
-            if isinstance(resources, list):
-                logger.info(f"Number of resources: {len(resources)}")
-            else:
-                logger.info(f"Resource URL: {resources}")
-        else:
-            logger.info("No resources included in the response")
-            
         logger.info(f"Number of next steps: {len(next_steps) if next_steps else 0}")
         logger.info(f"Response saved to conversation: {conversation_id}")
 
         # Return the response and conversation ID, including the agent type that was used
-        return jsonify({
-            'response': ai_response,
-            'conversation_id': conversation_id,
-            'resources': resources,
-            'next_steps': next_steps,
-            'agent_type': agent_type
-        })
+        return jsonify({'response': ai_response, 'conversation_id': conversation_id, 'next_steps': next_steps})
 
     except Exception as e:
         # Make sure to rollback any failed database operations

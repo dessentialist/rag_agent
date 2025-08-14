@@ -1,6 +1,7 @@
 import os
 import logging
 from flask import Flask, render_template
+import json
 from database import db
 
 # Import logging configuration
@@ -45,48 +46,49 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 # Initialize the database
 db.init_app(app)
 
-# Import blueprints after db init to avoid circular imports
 from routes.chat_routes import chat_bp
 from routes.file_routes import file_bp
+from routes.settings_routes import settings_bp
+from services.settings_service import ensure_default_ui_settings, get_ui_settings, get_general_settings, get_theme_settings
+from services.agent_registry import ensure_default_agents
 
-# Register blueprints
 app.register_blueprint(chat_bp)
 app.register_blueprint(file_bp)
+app.register_blueprint(settings_bp)
 
-# Create database tables
 with app.app_context():
     db.create_all()
     logger.info("Database tables created successfully")
-    
-    # Import file service here to avoid circular imports
-    from services.file_service import scan_knowledge_base
-    
-    # Get document information from Pinecone on startup
+    # Seed default agents (safe no-op if already present)
     try:
-        pinecone_info = scan_knowledge_base()
-        if pinecone_info:
-            stats = pinecone_info.get("pinecone_stats", {})
-            logger.info(f"Pinecone contains {stats.get('total_chunks', 0)} chunks from {stats.get('unique_files', 0)} documents")
+        ensure_default_agents()
     except Exception as e:
-        logger.error(f"Error retrieving Pinecone document information on startup: {str(e)}", exc_info=True)
+        logger.warning(f"Could not seed default agents: {e}")
 
 # Serve the main page
 @app.route('/')
 def index():
-    # Import configuration values to pass to the template
-    from config import BOT_WELCOME_MESSAGE, PREDEFINED_PROMPTS_JSON, DEFAULT_COURSE_THUMBNAIL
-    
+    # Ensure default UI settings exist for neutral rendering
+    ensure_default_ui_settings()
+    ui = get_ui_settings()
+    general = get_general_settings()
+    theme = get_theme_settings()
     return render_template(
         'index.html',
-        bot_welcome_message=BOT_WELCOME_MESSAGE,
-        predefined_prompts=PREDEFINED_PROMPTS_JSON,
-        default_course_thumbnail=DEFAULT_COURSE_THUMBNAIL
+        brand_name=general.get('brand_name', 'RAG Agent'),
+        bot_welcome_message=ui.get('welcome_message', ''),
+        predefined_prompts=json.dumps(ui.get('predefined_prompts', [])),
+        default_course_thumbnail=ui.get('default_course_thumbnail', '/static/images/course_thumbnail.svg'),
+        theme=theme,
     )
 
 # Serve the files management page
 @app.route('/files')
 def files():
-    return render_template('files.html')
+    ensure_default_ui_settings()
+    general = get_general_settings()
+    theme = get_theme_settings()
+    return render_template('files.html', brand_name=general.get('brand_name', 'RAG Agent'), theme=theme)
 
 # Import server config
 from config import SERVER_HOST, SERVER_PORT, DEBUG_MODE

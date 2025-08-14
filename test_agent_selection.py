@@ -2,7 +2,7 @@ import json
 import logging
 import requests
 from services.pinecone_service import semantic_search
-from services.agno_service import select_agent_by_doc_type, doc_agent, course_agent
+from services.agent_registry import select_agent_for_request
 
 # Set up logging
 logging.basicConfig(
@@ -22,13 +22,11 @@ def test_query(query, expected_agent_type=None):
     logger.info(f"\n{'='*80}\nTESTING QUERY: '{query}'\n{'='*80}")
     
     # 1. Test direct agent selection logic
-    logger.info("STEP 1: Testing select_agent_by_doc_type function directly")
+    logger.info("STEP 1: Testing select_agent_for_request function directly")
     relevant_docs = semantic_search(query, limit=5)
-    selected_agent = select_agent_by_doc_type(relevant_docs)
-    
-    # Determine the agent type
-    agent_type = "documentation" if selected_agent == doc_agent else "course"
-    logger.info(f"RESULT: Selected agent type is '{agent_type}'")
+    selected_agent, matched = select_agent_for_request(relevant_docs, query)
+    agent_type = selected_agent.name if selected_agent else 'none'
+    logger.info(f"RESULT: Selected agent is '{agent_type}' with rules: {matched}")
     
     # Track document types for analysis
     doc_types = []
@@ -49,24 +47,15 @@ def test_query(query, expected_agent_type=None):
     
     # 2. Test the select-agent API endpoint
     try:
-        logger.info("\nSTEP 2: Testing /api/select-agent endpoint")
+        logger.info("\nSTEP 2: Testing /api/health endpoint")
         response = requests.post(
-            "http://localhost:5000/api/select-agent",
-            json={"query": query},
+            "http://localhost:5000/api/health",
+            json={},
             timeout=10
         )
         
         if response.status_code == 200:
-            result = response.json()
-            api_agent_type = result.get('agent_type', 'unknown')
-            logger.info(f"API RESULT: Selected agent type is '{api_agent_type}'")
-            
-            # Validate results if expected type was provided
-            if expected_agent_type:
-                direct_match = agent_type == expected_agent_type
-                api_match = api_agent_type == expected_agent_type
-                logger.info(f"VALIDATION: Direct selection correct: {direct_match}")
-                logger.info(f"VALIDATION: API selection correct: {api_match}")
+            logger.info(f"API RESULT: health ok -> {response.json()}")
         else:
             logger.error(f"API Error: Status {response.status_code}")
             logger.error(f"Response: {response.text}")

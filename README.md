@@ -1,6 +1,6 @@
-# BigID University - AI Tutor (BigChat)
+# RAG Agent – Local-first Configurable Chatbot
 
-An advanced AI-powered document management system and chatbot for BigID University that leverages Retrieval-Augmented Generation (RAG) technology for intelligent document interaction and knowledge base synchronization.
+An open, neutral, local-first RAG chatbot with configurable settings, multi-agent registry, and SQLite by default. Designed to run on macOS easily with a Makefile and venv. No client branding.
 
 ![BigID University AI Tutor](generated-icon.png)
 
@@ -51,28 +51,22 @@ The application follows a modular architecture:
 ## Prerequisites
 
 - Python 3.11+
-- PostgreSQL
 - OpenAI API Key
 - Pinecone API Key
 
 ## Environment Variables
 
-The following environment variables are required:
+Most configuration now lives in the Settings store (SQLite). Optionally set:
 
-- `DATABASE_URL`: PostgreSQL connection string
-- `OPENAI_API_KEY`: API key for OpenAI
-- `PINECONE_API_KEY`: API key for Pinecone
-- `PINECONE_ENVIRONMENT`: Pinecone environment
-- `PINECONE_INDEX_NAME`: Name of the Pinecone index
-- `SESSION_SECRET`: Secret key for Flask sessions
+- `DATABASE_URL` (if using Postgres instead of default SQLite)
+- `SESSION_SECRET` (otherwise a dev default is used)
 
 ## Setup and Installation
 
 1. Clone the repository
-2. Set up the required environment variables
-3. Install dependencies: `pip install -r requirements.txt`
-4. Create the database tables: This happens automatically on first run
-5. Start the application: `gunicorn --bind 0.0.0.0:5000 main:app`
+2. Create venv and install: `make venv && make install`
+3. Run the server: `make run`
+4. Open `http://localhost:5000/api/health` and complete required settings in the upcoming Settings UI (coming next chunks). Until then, you can seed settings via `services/settings_service.py` functions in a Python shell.
 
 ## Directory Structure
 
@@ -153,4 +147,4 @@ Logging configuration is centralized in config.py, making it easy to adjust log 
 
 ## License
 
-Proprietary - All rights reserved
+MIT

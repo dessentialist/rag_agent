@@ -14,13 +14,14 @@ LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 # ============================================================
 
 # Flask settings
-SESSION_SECRET = os.environ.get("SESSION_SECRET")
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret")
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 5000
 DEBUG_MODE = True
 
 # Database settings
-DATABASE_URI = os.environ.get("DATABASE_URL")
+# Default to a local SQLite file unless DATABASE_URL is provided
+DATABASE_URI = os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(os.getcwd(), 'rag_agent.db')}"
 DATABASE_POOL_RECYCLE = 300
 DATABASE_POOL_PRE_PING = True
 DATABASE_TRACK_MODIFICATIONS = False
@@ -29,25 +30,24 @@ DATABASE_TRACK_MODIFICATIONS = False
 # API KEYS AND EXTERNAL SERVICE CONFIGURATIONS
 # ============================================================
 
-# OpenAI API Configuration
+# NOTE: Runtime OpenAI and embedding parameters are loaded from settings_service,
+# not from this file. Values below are kept only as legacy placeholders.
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 EMBEDDING_MODEL = "text-embedding-3-small"
-LLM_MODEL = "gpt-4o"  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-LLM_TEMPERATURE = 0.3  # Lower temperature for more deterministic responses based on source material
-LLM_MAX_TOKENS = 2000  # Maximum tokens for the AI response
-LLM_RESPONSE_FORMAT = {
-    "type": "json_object"
-}  # Format for structured responses
+LLM_MODEL = "gpt-4o"
+LLM_TEMPERATURE = 0.3
+LLM_MAX_TOKENS = 2000
+LLM_RESPONSE_FORMAT = {"type": "json_object"}
 
-# Pinecone Vector Database Configuration
+# NOTE: Runtime Pinecone parameters are loaded from settings_service.
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", "")
 PINECONE_ENVIRONMENT = os.environ.get("PINECONE_ENVIRONMENT", "gcp-starter")
-PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME", "bigid-university")
-PINECONE_DIMENSION = 1536  # Dimension for 'text-embedding-3-small'
-PINECONE_METRIC = "cosine"  # Similarity metric
-PINECONE_CLOUD = "aws"  # Cloud provider
-PINECONE_REGION = "us-west-2"  # Region
-PINECONE_SEARCH_LIMIT = 5  # Number of relevant documents to return in search
+PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME", "rag-agent-index")
+PINECONE_DIMENSION = 1536
+PINECONE_METRIC = "cosine"
+PINECONE_CLOUD = "aws"
+PINECONE_REGION = "us-west-2"
+PINECONE_SEARCH_LIMIT = 5
 
 # ============================================================
 # FILE UPLOAD AND PROCESSING CONFIGURATIONS
@@ -68,61 +68,13 @@ CHUNK_OVERLAP = 30  # Overlap between chunks in characters
 # AI AGENT CONFIGURATIONS
 # ============================================================
 
-# Course Agent Configuration
+# Legacy agent constants are deprecated; agents are stored in DB and loaded via settings/registry.
 COURSE_AGENT_NAME = "course-agent"
-COURSE_AGENT_DESCRIPTION = "AI Tutor for BigID University Course Content"
-
-# Course Agent Instructions (Controls response format and behavior)
-COURSE_AGENT_INSTRUCTIONS = """Return response in JSON. Use the following keys - 'main','resources','next_steps'. 
-- 'main': should contain the main body of the answer. 
-- 'resources': should be only the course link, that is given in the RAG document context directly as the value for the key "URL". That will be rendered as a multimedia item in the front end.
-- 'next_steps': should be a list of 2-3 suggested next steps related to the current question that the user might want to explore. It should be brief and concise. It should not contain any hyperlinks. Don't use more than 7-8 words in condensed sentences that are easy to understand.
-
-IMPORTANT: ONLY USE INFORMATION FROM THE PROVIDED DOCUMENTS TO ANSWER QUESTIONS.
-DO NOT use any prior knowledge or information not contained in the retrieved documents.
-You have NO general knowledge about BigID outside of the specific documents retrieved for each query.
-If the retrieved documents don't contain information relevant to the question, respond with: 'I'm sorry, I couldn't find information about that in my knowledge base.' DO NOT attempt to answer based on general knowledge.
-INCLUDE hyperlinks and other citations to the source URL of the information you used in your response.
-DON'T Answer questions that are not related to BigID.
-Answer questions EXCLUSIVELY USING the retrieved documents provided. NEVER rely on any other knowledge.
-NEVER MENTION COMPETITORS.
-NEVER speculate or infer information not explicitly stated in the retrieved documents.
-
-WRITING Style: 
-
-1. **Simple and compelling language:** Keeps the content easy to understand and engaging.
-2. **Concise and active voice:** Avoids lengthy explanations and uses direct, action-oriented sentences.
-3. **Avoids clichés and obscure words:** Ensures originality and accessibility.
-4. **Varied sentence lengths:** Maintains reader interest with dynamic pacing.
-5. **Business writing proficiency:** Excels in presenting complex or technical topics clearly and straightforwardly.
-"""
-
-# Documentation Agent Configuration
+COURSE_AGENT_DESCRIPTION = "Course-focused agent"
+COURSE_AGENT_INSTRUCTIONS = "Return response in JSON with keys 'main' and 'next_steps'."
 DOC_AGENT_NAME = "doc-agent"
-DOC_AGENT_DESCRIPTION = "AI Tutor for BigID Technical Documentation"
-
-# Documentation Agent Instructions (Controls response format and behavior)
-DOC_AGENT_INSTRUCTIONS = """Return response in JSON. Use the following keys - 'main','next_steps'. 
-- 'main': should contain the main body of the answer. 
-- 'next_steps': should be a list of 2-3 suggested next steps related to the current question that the user might want to explore. It should be brief and concise. It should not contain any hyperlinks. Don't use more than 7-8 words in condensed sentences that are easy to understand.
-IMPORTANT: ONLY USE INFORMATION FROM THE PROVIDED DOCUMENTS TO ANSWER QUESTIONS.
-DO NOT use any prior knowledge or information not contained in the retrieved documents.
-You have NO general knowledge about BigID outside of the specific documents retrieved for each query.
-If the retrieved documents don't contain information relevant to the question, respond with: 'I'm sorry, I couldn't find information about that in my knowledge base.' DO NOT attempt to answer based on general knowledge.
-INCLUDE hyperlinks and other citations to the source URL of the information you used in your response.
-DON'T Answer questions that are not related to BigID.
-Answer questions EXCLUSIVELY USING the retrieved documents provided. NEVER rely on any other knowledge.
-NEVER MENTION COMPETITORS.
-NEVER speculate or infer information not explicitly stated in the retrieved documents.
-
-WRITING Style: 
-
-1. **Simple and compelling language:** Keeps the content easy to understand and engaging.
-2. **Concise and active voice:** Avoids lengthy explanations and uses direct, action-oriented sentences.
-3. **Avoids clichés and obscure words:** Ensures originality and accessibility.
-4. **Varied sentence lengths:** Maintains reader interest with dynamic pacing.
-5. **Business writing proficiency:** Excels in presenting complex or technical topics clearly and straightforwardly.
-"""
+DOC_AGENT_DESCRIPTION = "Documentation-focused agent"
+DOC_AGENT_INSTRUCTIONS = "Return response in JSON with keys 'main' and 'next_steps'."
 
 # Shared Agent Persona (How the agent views itself)
 AGENT_PERSONA = """You are a RAG-based knowledge retrieval system that EXCLUSIVELY uses information from retrieved documents to answer questions about BigID. Infer the purpose of the conversation. Answer in a format that would best be appropriate for the purpose of the conversation. Understand the nuances of why I might be giving those instructions to aid in answering in the most optimal manner.
@@ -200,18 +152,18 @@ AGENT_TOOLS = [{
 DEFAULT_COURSE_THUMBNAIL = "/static/images/course_thumbnail.svg"
 
 # Chat UI Messages
-BOT_WELCOME_MESSAGE = "Hey there! I'm your AI assistant for all things BigID. What can I do for you today?"
+BOT_WELCOME_MESSAGE = "Welcome! I'm your local RAG assistant. How can I help today?"
 
 # Predefined prompts that appear after the welcome message
 PREDEFINED_PROMPTS = [{
-    "title": "My First Course",
-    "description": "Help me enroll in my first course."
+    "title": "What can you do?",
+    "description": "What types of questions can I ask?"
 }, {
-    "title": "What Can I Learn Here",
-    "description": "Guide me through the BigID catalog."
+    "title": "Search docs",
+    "description": "Find info about data sources"
 }, {
-    "title": "Training Credits",
-    "description": "What are they, and how to use them?"
+    "title": "Troubleshoot",
+    "description": "Why isn't my index returning results?"
 }]
 
 # Convert PREDEFINED_PROMPTS to a JSON string for JavaScript consumption
@@ -219,7 +171,7 @@ PREDEFINED_PROMPTS_JSON = json.dumps(PREDEFINED_PROMPTS)
 
 # UI Theme Configuration
 THEME_COLORS = {
-    "primary": "#a153e4",  # BigID Purple
+    "primary": "#7aa2f7",
     "secondary": "#6c757d",
     "success": "#28a745",
     "danger": "#dc3545",

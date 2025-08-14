@@ -3,7 +3,8 @@ import logging
 import uuid
 from flask import Blueprint, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-from config import ALLOWED_EXTENSIONS, MAX_CONTENT_LENGTH, LOG_LEVEL, LOG_FORMAT
+from config import MAX_CONTENT_LENGTH
+from services.settings_service import get_rag_settings
 from database import db
 from services.file_service import (
     save_file, 
@@ -24,7 +25,8 @@ file_bp = Blueprint('file_bp', __name__, url_prefix='/api')
 
 def allowed_file(filename):
     """Check if the file extension is allowed"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    allowed = set(get_rag_settings().get('allowed_extensions', ['txt','json','md','jsonl','csv']))
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed
 
 @file_bp.route('/files/upload', methods=['POST'])
 def upload_file():
@@ -44,9 +46,8 @@ def upload_file():
         
         # Check if the file type is allowed
         if not allowed_file(file.filename):
-            return jsonify({
-                'error': f'Unsupported file type. Please upload files with {", ".join(ALLOWED_EXTENSIONS)} extensions'
-            }), 400
+            allowed = get_rag_settings().get('allowed_extensions', ['txt','json','md','jsonl','csv'])
+            return jsonify({'error': f'Unsupported file type. Allowed: {", ".join(allowed)}'}), 400
         
         # Create a secure filename
         filename = secure_filename(file.filename)

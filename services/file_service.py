@@ -8,7 +8,7 @@ from models import Document, DocumentChunk
 from utils.embeddings import chunk_text
 from services.pinecone_service import upsert_to_pinecone, delete_from_pinecone, list_all_vectors
 from database import db
-from config import KNOWLEDGE_BASE_DIR, ALLOWED_EXTENSIONS, LOG_LEVEL, LOG_FORMAT
+from config import KNOWLEDGE_BASE_DIR
 
 # Configure logging
 logger = logging.getLogger(__name__)

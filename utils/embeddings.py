@@ -1,12 +1,12 @@
 import logging
-from config import CHUNK_SIZE, CHUNK_OVERLAP, LOG_LEVEL, LOG_FORMAT
+from services.settings_service import get_rag_settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
 # Logging is already configured in app.py
 # Just initialize logger for this module
 
-def chunk_text(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
+def chunk_text(text, chunk_size=None, chunk_overlap=None):
     """
     Split text into chunks of specified size with overlap
     
@@ -27,6 +27,14 @@ def chunk_text(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
         if not isinstance(text, str):
             text = str(text)
         
+        # Load chunking settings if not provided
+        if chunk_size is None or chunk_overlap is None:
+            rag_cfg = get_rag_settings()
+            if chunk_size is None:
+                chunk_size = int(rag_cfg.get("chunk_size", 500))
+            if chunk_overlap is None:
+                chunk_overlap = int(rag_cfg.get("chunk_overlap", 30))
+
         chunks = []
         start = 0
         text_length = len(text)

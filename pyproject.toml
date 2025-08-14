@@ -1,18 +1,33 @@
 [project]
-name = "repl-nix-workspace"
+name = "rag-agent"
 version = "0.1.0"
-description = "Add your description here"
+description = "Local-first configurable RAG agent"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=0.51.0",
-    "email-validator>=2.2.0",
     "flask>=3.1.0",
     "flask-sqlalchemy>=3.1.1",
     "gunicorn>=23.0.0",
     "openai>=1.73.0",
     "pinecone>=6.0.2",
-    "psycopg2-binary>=2.9.10",
     "requests>=2.32.3",
-    "routes>=2.5.1",
     "sqlalchemy>=2.0.40",
+    # Optional (Postgres)
+    "psycopg2-binary>=2.9.10",
 ]
+
+[tool.setuptools]
+packages = [
+    "routes",
+    "services",
+    "utils",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I"]
+ignore = []
