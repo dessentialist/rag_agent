@@ -1,0 +1,84 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging / build
+build/
+dist/
+develop-eggs/
+downloads/
+egss/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-wheel-metadata/
+
+# Testing / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Logs & temp
+*.log
+logs/
+tmp/
+temp/
+
+# Flask instance
+instance/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.envrc
+
+# SQLite database (local persistence)
+rag_agent.db
+*.sqlite
+*.sqlite3
+
+# Node (if added later)
+node_modules/
+
+# Project-specific artifacts
+knowledge-base/
+replit.nix
+
+# OS-specific junk
+Thumbs.db

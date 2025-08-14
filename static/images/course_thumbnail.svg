@@ -1,0 +1,44 @@
+<svg width="250" height="120" viewBox="0 0 250 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a153e4"/>
+      <stop offset="100%" stop-color="#7232a8"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+  
+  <!-- BigID Logo and Education Label -->
+  <g transform="translate(15, 25)">
+    <!-- Logo circle -->
+    <circle cx="15" cy="15" r="15" fill="#ffffff"/>
+    <!-- Stylized "B" -->
+    <path d="M10,7 C10,7 13,9 15,9 C17,9 20,7 20,7 C20,7 22,12 20,17 C18,22 15,23 15,23 C15,23 12,22 10,17 C8,12 10,7 10,7 Z" 
+          fill="#a153e4" stroke="#7232a8" stroke-width="1"/>
+    
+    <!-- Text -->
+    <text x="35" y="12" font-family="Arial, sans-serif" font-size="12" fill="white" font-weight="bold">Lab Interface Update</text>
+    <text x="35" y="24" font-family="Arial, sans-serif" font-size="10" fill="white">BigID Education</text>
+  </g>
+  
+  <!-- Dashboard UI Elements -->
+  <g transform="translate(15, 50)">
+    <!-- Main content area -->
+    <rect x="0" y="0" width="220" height="50" rx="3" ry="3" fill="rgba(255,255,255,0.15)"/>
+    
+    <!-- Dashboard metrics -->
+    <rect x="10" y="10" width="45" height="30" rx="2" ry="2" fill="rgba(255,255,255,0.2)"/>
+    <rect x="65" y="10" width="45" height="30" rx="2" ry="2" fill="rgba(255,255,255,0.2)"/>
+    <rect x="120" y="10" width="45" height="30" rx="2" ry="2" fill="rgba(255,255,255,0.2)"/>
+    <rect x="175" y="10" width="35" height="30" rx="2" ry="2" fill="rgba(255,255,255,0.2)"/>
+  </g>
+  
+  <!-- Video player controls -->
+  <g transform="translate(15, 110)">
+    <rect x="0" y="0" width="220" height="5" rx="2" ry="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="5" cy="-5" r="5" fill="white" fill-opacity="0.5"/>
+  </g>
+  
+  <!-- BigID University Label -->
+  <text x="125" y="115" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle">BigID University</text>
+</svg>
