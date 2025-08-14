@@ -20,6 +20,5 @@
     <rect x="5" y="25" width="25" height="5" rx="1" ry="1" fill="#6042A6" />
   </g>
   
-  <!-- BigID University text -->
-  <text x="100" y="95" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BigID University</text>
+  <!-- Neutralized: no client-specific text -->
 </svg>

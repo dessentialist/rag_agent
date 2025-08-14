@@ -1,4 +1,4 @@
-// File management functionality for BigChat
+// File management functionality for neutral RAG Agent
 
 document.addEventListener('DOMContentLoaded', function() {
     // Elements

@@ -1,4 +1,4 @@
-// Chat functionality for BigChat UI
+// Chat functionality for neutral RAG Agent UI
 
 document.addEventListener('DOMContentLoaded', function() {
     // Elements

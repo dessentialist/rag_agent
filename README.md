@@ -2,31 +2,31 @@
 
 An open, neutral, local-first RAG chatbot with configurable settings, multi-agent registry, and SQLite by default. Designed to run on macOS easily with a Makefile and venv. No client branding.
 
-![BigID University AI Tutor](generated-icon.png)
+![RAG Agent](generated-icon.png)
 
 ## Overview
 
-BigChat is an AI-powered tutoring system designed to help users learn about BigID concepts, navigate the platform, and troubleshoot issues by providing accurate, relevant information from the knowledge base. The system uses a combination of advanced technologies:
+This application is an AI-powered local assistant designed to help users query their own knowledge base, navigate content, and troubleshoot issues by providing accurate, relevant information from retrieved documents. The system uses a combination of technologies:
 
 - **Retrieval-Augmented Generation (RAG)**: Enhances the AI's responses by retrieving relevant information from a knowledge base
 - **Vector Database (Pinecone)**: Stores document embeddings for semantic search
 - **OpenAI Integration**: Powers the AI's understanding and response generation
-- **Knowledge Base Synchronization**: Maintains a bidirectional sync between the database and file system
+  
 
 ## Key Features
 
 - **Intelligent Chatbot Interface**: 
-  - Ask questions about BigID and receive accurate answers based on the knowledge base
-  - Streamlined responses with main content, next steps, and resources
+  - Ask questions and receive accurate answers based on your uploaded knowledge base
+  - Streamlined responses with main content and optional next steps
   - Real-time markdown rendering during typing animation for immediate text formatting
   - Simplified predefined prompts with prominent titles and centered text
   - Improved UI flow with intuitive component organization
-- **Document Management**: Upload, view, and delete files (supports TXT, JSON, MD, JSONL, CSV)
-- **Database Document Storage**: Files uploaded through the UI are saved directly to the PostgreSQL database
+- **Document Management**: Upload, view, and delete files (supports TXT, JSON, MD, JSONL, CSV, DOCX, PDF, XLSX)
+- **Database Document Storage**: Files uploaded through the UI are saved directly to the local SQLite database by default (Postgres optional)
 - **Vector Embedding Storage**: Document chunks are stored in Pinecone with their vector embeddings for semantic search
 - **Semantic Search**: Uses vector embeddings to find the most relevant information for user queries
 - **Comprehensive Logging**: Detailed logs for chat conversations, RAG retrieval, API calls, file operations, and vector operations
-- **Centralized Configuration**: All application settings are centralized in config.py for easy maintenance and optimization
+- **Centralized Configuration**: Runtime settings are managed via the Settings store (SQLite) and accessed through `services/settings_service.py`. Minimal legacy defaults remain in `config.py`.
 
 ## System Architecture
 
@@ -34,16 +34,16 @@ The application follows a modular architecture:
 
 - **Frontend**: HTML/CSS/JavaScript interface with separate pages for chat and file management
 - **Backend**: Flask-based Python server with RESTful API endpoints
-- **Database**: PostgreSQL with SQLAlchemy ORM for data persistence
+- **Database**: SQLite by default with SQLAlchemy ORM (Postgres optional via `DATABASE_URL`)
 - **Vector Storage**: Pinecone vector database for semantic search capabilities
-- **File Storage**: Two-way sync between database and file system
-- **Configuration**: Centralized configuration management in config.py
+- **File Storage**: Files stored in the database; Pinecone stores embeddings
+- **Configuration**: Settings-driven runtime via `services/settings_service.py`; minimal legacy boot values in `config.py`
 
 ## Components
 
 - **Chat Interface**: Ask questions and receive AI-powered responses
 - **File Management**: Upload, view, and delete documents
-- **Knowledge Base Sync**: Automatically import files from the knowledge-base directory
+- **Vector DB Stats**: View Pinecone document/chunk stats; refresh and manage
 - **Agno Agent**: Integration layer for AI capabilities
 - **Database Models**: Stores conversations, messages, documents, and document chunks
 - **Configuration System**: Centralized settings in config.py organized by function
@@ -66,7 +66,7 @@ Most configuration now lives in the Settings store (SQLite). Optionally set:
 1. Clone the repository
 2. Create venv and install: `make venv && make install`
 3. Run the server: `make run`
-4. Open `http://localhost:5000/api/health` and complete required settings in the upcoming Settings UI (coming next chunks). Until then, you can seed settings via `services/settings_service.py` functions in a Python shell.
+4. Open `http://localhost:5000/` — on first run, you will be redirected to the Settings page to configure providers (OpenAI, Pinecone), defaults, theme, and agents. Use the Diagnostics buttons to validate connectivity before chatting.
 
 ## Directory Structure
 
@@ -126,13 +126,10 @@ Most configuration now lives in the Settings store (SQLite). Optionally set:
 
 ### Chat Interface Structure
 
-When a user asks a question, the response follows a streamlined format:
+Responses follow a streamlined format:
 
-1. **Main Answer**: The primary response to the user's query appears first with a typing animation that features real-time markdown rendering - formatted text (bold, italic, etc.) appears immediately as each character is typed
-2. **Next Steps**: Interactive blue buttons with arrow icons suggesting follow-up questions or actions
-3. **Resources**: Reference materials related to the query with preview links
-
-This simplified structure provides a cleaner user experience with immediate focus on the answer and follow-up actions, eliminating unnecessary information overload.
+1. **Main Answer**: Primary response with real-time markdown rendering
+2. **Next Steps**: Optional buttons suggesting follow-up prompts
 
 ## Logging
 

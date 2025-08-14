@@ -1,6 +1,6 @@
 # RAG Agent – Blueprint
 
-This document serves as a working record of changes, decisions, and development progress for the BigID University AI Tutor application. It will be updated as the project evolves to maintain a comprehensive record of the system architecture and implementation decisions.
+This document serves as a working record of changes, decisions, and development progress for the neutral local-first RAG Agent application. It will be updated as the project evolves to maintain a comprehensive record of the system architecture and implementation decisions.
 
 **Last Updated:** August 14, 2025
 
@@ -21,14 +21,14 @@ This document serves as a working record of changes, decisions, and development 
 
 This project is a neutral, local‑first, configurable RAG chatbot. It leverages Retrieval‑Augmented Generation (RAG) for intelligent interaction with a local knowledge base. The system allows users to:
 
-- Upload and manage documents related to BigID University
+- Upload and manage documents for your local knowledge base
 - Chat with an AI assistant that provides answers based on the knowledge base
 - Automatically sync files between the database and the file system
 - Perform semantic searches across document content
 
 ### Key Features
 
-- **Intelligent Chatbot Interface**: Ask questions about BigID and receive accurate answers based on the knowledge base (resource cards removed; optional next-steps retained)
+- **Intelligent Chatbot Interface**: Ask questions and receive accurate answers based on the knowledge base (resource cards removed; optional next-steps retained)
 - **Document Management**: Upload, view, and delete files (supports TXT, MD, JSON, JSONL, CSV, DOCX, PDF, XLSX)
 - **Database Storage**: Files uploaded through the UI are saved directly to the database
 - **Vector Database Storage**: Document chunks are stored in Pinecone vector database for semantic retrieval
@@ -60,7 +60,7 @@ The application follows a modular architecture with clean separation between com
                                   v
                           +-------------------+     +-------------------+
                           |                   |     |                   |
-                           |  SQLite/Postgres  |<--->|  Pinecone         |
+                          |  SQLite/Postgres  |<--->|  Pinecone         |
                           |  Database         |     |  Vector Database  |
                           |                   |     |                   |
                           +-------------------+     +-------------------+
@@ -222,9 +222,8 @@ Stores individual messages within conversations.
 - [ ] Improve RAG retrieval accuracy with advanced chunking strategies
 
 ### Backlog
-- [ ] Add CSV/XLS import for batch document processing
-- [ ] Add support for multimedia content in knowledge base
-- [ ] Implement advanced analytics on user interactions
+- [ ] Optional master password for local encryption of secrets in SQLite
+- [ ] Accessibility enhancements and i18n improvements
 
 ## Change Log
 
@@ -272,7 +271,7 @@ Stores individual messages within conversations.
 
 ## Configuration Management
 
-The application uses a centralized configuration approach with all settings defined in `config.py`. This includes:
+The application uses a runtime settings store backed by SQLite and accessed via `services/settings_service.py`. Minimal legacy constants remain in `config.py` for boot, but execution-time parameters come from settings. This includes:
 
 1. **Logging Configuration**
    - Log levels and formats

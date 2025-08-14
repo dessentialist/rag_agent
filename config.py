@@ -79,13 +79,13 @@ DOC_AGENT_DESCRIPTION = "Documentation-focused agent"
 DOC_AGENT_INSTRUCTIONS = "Return response in JSON with keys 'main' and 'next_steps'."
 
 # Shared Agent Persona (How the agent views itself)
-AGENT_PERSONA = """You are a RAG-based knowledge retrieval system that EXCLUSIVELY uses information from retrieved documents to answer questions about BigID. Infer the purpose of the conversation. Answer in a format that would best be appropriate for the purpose of the conversation. Understand the nuances of why I might be giving those instructions to aid in answering in the most optimal manner.
+AGENT_PERSONA = """You are a RAG-based knowledge retrieval system that EXCLUSIVELY uses information from retrieved documents to answer questions about the user's knowledge base. Infer the purpose of the conversation. Answer in a format that would best be appropriate for the purpose of the conversation. Understand the nuances of why I might be giving those instructions to aid in answering in the most optimal manner.
 
 Your purpose is to:
 1. Search the knowledge base for relevant information
 2. Use ONLY the information from retrieved documents to formulate responses
 3. Clearly indicate when information is not available in the retrieved documents
-4. NEVER use general knowledge or prior understanding about BigID
+4. NEVER use general knowledge or prior understanding beyond the retrieved documents
 
 Provide precise citations and sources for every piece of information in your response, including links to documents. Format your answers clearly and concisely. Do not introduce any information that is not explicitly present in the retrieved documents.
 """
@@ -95,7 +95,7 @@ AGENT_GOAL = """The goal of this task is to provide STRICTLY RAG-based responses
 
 When users ask questions, the system should:
 1. Use ONLY information found in the retrieved documents
-2. NEVER use general knowledge or prior information about BigID
+2. NEVER use general knowledge or prior information beyond the retrieved documents
 3. Clearly state when information is not available in the retrieved documents
 4. Provide specific citations to document sources for all information
 5. Shorten your answers to one or two sentences maximum, unless the user asks for more details
@@ -107,7 +107,7 @@ RAG_SYSTEM_MESSAGE_TEMPLATE = """
 # STRICT RAG-ONLY SYSTEM
 
 You are a RAG-only knowledge retrieval system that can ONLY use information from the retrieved documents below.
-You must NOT use any prior knowledge or general information about BigID.
+You must NOT use any prior knowledge or general information beyond the retrieved documents.
 You must NEVER generate information that isn't explicitly stated in the retrieved documents.
 
 {instructions}
@@ -135,8 +135,8 @@ CRITICAL_REMINDER_MESSAGE = "CRITICAL REMINDER: You must ONLY use information fr
 # Agent Tool Configuration (Shared)
 AGENT_TOOLS = [
     {
-        "name": "search_bigid_docs",
-        "description": "Search BigID documentation",
+        "name": "search_local_docs",
+        "description": "Search local documentation",
         "parameters": {"query": {"type": "string", "description": "The search query"}},
     }
 ]

@@ -1,6 +1,6 @@
-# BigID University - AI Tutor Function Documentation
+# RAG Agent - Function Documentation
 
-This document provides detailed information about the functions and components of the BigID University AI Tutor application. It serves as a technical reference for developers working with the codebase.
+This document provides detailed information about the functions and components of the neutral RAG Agent application. It serves as a technical reference for developers working with the codebase.
 
 ## Table of Contents
 
@@ -57,7 +57,7 @@ The application follows a modular architecture with the following components:
     - `SERVER_HOST`: Host address for the server
     - `SERVER_PORT`: Port number for the server
     - `DEBUG_MODE`: Flag for Flask debug mode
-    - `DATABASE_URI`: PostgreSQL connection string
+    - `DATABASE_URI`: Database connection string (SQLite by default; Postgres optional via `DATABASE_URL`)
     - `DATABASE_POOL_RECYCLE`: Connection pool recycling time
     - `DATABASE_POOL_PRE_PING`: Flag for connection health checks
     - `DATABASE_TRACK_MODIFICATIONS`: Flag for SQLAlchemy event tracking
@@ -152,8 +152,7 @@ The application follows a modular architecture with the following components:
       - `__init__(name, description, instructions, persona, goal)`: Initializes the agent
       - `add_tool(tool)`: Adds a tool to the agent
       - `run(query, context=None)`: Runs the agent with a query
-- **Functions**:
-  - `create_bigchat_agent()`: Creates a BigChat agent with provided parameters
+// Deprecated legacy content removed: create_bigchat_agent
 - **Agent Instances**:
   - `course_agent`: Original agent instance for course-related documents
   - `doc_agent`: Modified agent instance that responds with brief explanations in JSON format
@@ -292,7 +291,7 @@ The application follows a modular architecture with the following components:
   - `addBotMessage(message, withTypingEffect)`: Adds a bot message to the chat
   - `addTypingIndicator()`: Adds a typing indicator
   - `typeMessage(element, message, speed)`: Types out a message with real-time markdown rendering
-  - `addResourceCarousel(resources)`: Adds a carousel of resources to the last message
+  // Resources carousel removed in simplified UI
   - `scrollToBottom()`: Scrolls the chat to the bottom
   - `addSuggestedTopics()`: Adds suggested topics with clickable buttons
   - `addNextSteps(steps, targetElement)`: Adds interactive next step buttons
